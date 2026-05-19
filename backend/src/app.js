@@ -1,18 +1,17 @@
 import express from "express";
+
 import cors from "cors";
+
 import authRoutes from "./routes/authRoute.js";
-// Initialize Express app
+
 const app = express();
 
-// Middleware
+// MIDDLEWARE
 app.use(cors());
+
 app.use(express.json());
 
-// Basic route to check if the server is running
-app.get("/", (req, res) => {
-  res.send("SkillConnect API Running");
-});
+// ROUTES
+app.use("/api/auth", authRoutes);
 
-// Routes for authentication
-app.use("/api/v1/auth", authRoutes);
 export default app;
