@@ -23,11 +23,6 @@ const userSchema = new mongoose.Schema(
       enum: ["worker", "client"],
       required: true,
     },
-
-    profileImage: {
-      type: String,
-      default: "",
-    },
   },
   {
     timestamps: true,

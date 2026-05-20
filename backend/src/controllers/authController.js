@@ -1,4 +1,4 @@
-import User from "../models/userModel.js";
+import User from "../models/userSchema.js";
 
 import bcrypt from "bcrypt";
 
@@ -21,7 +21,10 @@ export const registerUser = async (req, res) => {
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10); //salt is a random string that is added
+    // to the password before hashing to make it more secure. The number 10 is the
+    //  cost factor, which determines how many times the hashing algorithm will be
+    // applied. A higher cost factor means more security but also more time to hash the password.
 
     const hashedPassword = await bcrypt.hash(password, salt);
 
