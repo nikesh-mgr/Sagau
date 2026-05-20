@@ -2,7 +2,7 @@
 
 ## Introduction
 
-SkillConnect is a hybrid freelance + local skilled-worker marketplace platform.
+Sagau is a hybrid freelance + local skilled-worker marketplace platform.
 
 It connects:
 

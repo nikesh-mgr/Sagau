@@ -1,20 +1,32 @@
 # Backend Structure
 
 backend/
-│
-├── src/
-│
-├── config/
-├── routes/
-├── controllers/
-├── models/
-├── services/
-├── middleware/
-├── utils/
-├── validators/
-│
-├── app.js
-└── server.js
+-node_modules
+-src
+--config
+---db.js
+--controllers
+---clientController.js
+---authController.js
+---workerController.js
+--middleware
+---authMiddleware.js
+--models
+---userSchema.js
+---workerSchema.js
+---clientSchema.js
+--routes
+---authRoute.js
+---workerRoute.js
+---clientRoute.js
+--utils
+---generateToken.js
+--app.js
+--server.js
+-.env
+-.gitignore
+-package-lock.json
+-package.json
 
 ---
 
@@ -24,7 +36,7 @@ backend/
 
 /api/v1/auth
 
-## User Routes
+## client Routes
 
 /api/v1/users
 
