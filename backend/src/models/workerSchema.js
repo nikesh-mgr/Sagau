@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const workerProfileSchema = new mongoose.Schema(
+const workerSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -9,35 +9,45 @@ const workerProfileSchema = new mongoose.Schema(
       unique: true,
     },
 
-    profileImage: {
-      type: String,
-      default: "",
+    skills: {
+      type: [String],
+      required: true,
     },
 
     bio: {
       type: String,
-      trim: true,
-      maxlength: 500,
-    },
-
-    skills: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-
-    location: {
-      type: String,
-      trim: true,
+      required: true,
     },
 
     experience: {
       type: Number,
-      default: 0,
+      required: true,
+      min: 0,
     },
 
-    completedJobs: {
+    hourlyRate: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    location: {
+      type: String,
+      required: true,
+    },
+
+    availability: {
+      type: String,
+      enum: ["Available", "Busy", "Not Available"],
+      default: "Available",
+    },
+
+    portfolio: {
+      type: [String],
+      default: [],
+    },
+
+    rating: {
       type: Number,
       default: 0,
     },
@@ -45,6 +55,4 @@ const workerProfileSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const WorkerProfile = mongoose.model("WorkerProfile", workerProfileSchema);
-
-export default WorkerProfile;
+export default mongoose.model("Worker", workerSchema);

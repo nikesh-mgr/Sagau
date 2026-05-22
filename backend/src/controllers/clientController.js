@@ -1,57 +1,61 @@
 import Client from "../models/clientSchema.js";
 
-export const createClientProfile = async (req, res) => {
-  try {
-    const exists = await Client.findOne({ user: req.user.id });
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
-    if (exists) {
-      return res.status(400).json({ message: "Already exists" });
-    }
+// CREATE CLIENT PROFILE
+export const createClientProfile = asyncHandler(async (req, res) => {
+  // CHECK EXISTING PROFILE
+  const existingProfile = await Client.findOne({
+    user: req.user._id,
+  });
 
-    const profile = await Client.create({
-      user: req.user.id,
-      ...req.body,
-    });
-
-    res.status(201).json(profile);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-export const updateClientProfile = async (req, res) => {
-  const profile = await Client.findOne({ user: req.user.id });
-
-  if (!profile) {
-    return res.status(404).json({ message: "Not found" });
+  if (existingProfile) {
+    throw new ApiError(400, "Client profile already exists");
   }
 
-  Object.assign(profile, req.body);
+  // CREATE PROFILE
+  const client = await Client.create({
+    user: req.user._id,
+    address: req.body.address,
+    phone: req.body.phone,
+  });
 
-  await profile.save();
+  res.status(201).json(new ApiResponse(201, "Client profile created", client));
+});
 
-  res.json(profile);
-};
-export const getMyClientProfile = async (req, res) => {
-  const profile = await Client.findOne({ user: req.user.id }).populate(
-    "user",
-    "fullName email roles",
+// GET MY CLIENT PROFILE
+export const getMyClientProfile = asyncHandler(async (req, res) => {
+  const client = await Client.findOne({
+    user: req.user._id,
+  }).populate("user", "fullName email role");
+
+  if (!client) {
+    throw new ApiError(404, "Client profile not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "Client profile fetched", client));
+});
+
+// UPDATE CLIENT PROFILE
+export const updateClientProfile = asyncHandler(async (req, res) => {
+  const updatedProfile = await Client.findOneAndUpdate(
+    {
+      user: req.user._id,
+    },
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    },
   );
-  res.json(profile);
-};
-export const getClientProfile = async (req, res) => {
-  try {
-    const profile = await Client.findById(req.params.id).populate(
-      "user",
-      "fullName email roles",
-    );
 
-    if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
-    }
-
-    res.json(profile);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  if (!updatedProfile) {
+    throw new ApiError(404, "Profile not found");
   }
-};
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Client profile updated", updatedProfile));
+});

@@ -1,121 +1,109 @@
-import WorkerProfile from "../models/workerSchema.js";
-export const createProfile = async (req, res) => {
-  try {
-    const existingProfile = await WorkerProfile.findOne({
-      user: req.user.id,
-    });
+import Worker from "../models/workerSchema.js";
 
-    if (existingProfile) {
-      return res.status(400).json({
-        success: false,
-        message: "Profile already exists",
-      });
-    }
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
-    const { bio, skills, location, experience, profileImage } = req.body;
+// CREATE WORKER PROFILE
+export const createWorkerProfile = asyncHandler(async (req, res) => {
+  // CHECK EXISTING PROFILE
+  const existingProfile = await Worker.findOne({
+    user: req.user._id,
+  });
 
-    const profile = await WorkerProfile.create({
-      user: req.user.id,
-      bio,
-      skills,
-      location,
-      experience,
-      profileImage,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Profile created successfully",
-      profile,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (existingProfile) {
+    throw new ApiError(400, "Worker profile already exists");
   }
-};
-export const updateProfile = async (req, res) => {
-  try {
-    const profile = await WorkerProfile.findOne({
-      user: req.user.id,
-    });
 
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
+  // CREATE PROFILE
+  const worker = await Worker.create({
+    user: req.user._id,
+    skills: req.body.skills,
+    bio: req.body.bio,
+    experience: req.body.experience,
+    hourlyRate: req.body.hourlyRate,
+    location: req.body.location,
+    availability: req.body.availability,
+    portfolio: req.body.portfolio,
+  });
 
-    const { bio, skills, location, experience, profileImage } = req.body;
+  res.status(201).json(new ApiResponse(201, "Worker profile created", worker));
+});
 
-    profile.bio = bio || profile.bio;
-    profile.skills = skills || profile.skills;
-    profile.location = location || profile.location;
-    profile.experience = experience || profile.experience;
-    profile.profileImage = profileImage || profile.profileImage;
+// GET MY PROFILE
+export const getMyWorkerProfile = asyncHandler(async (req, res) => {
+  const worker = await Worker.findOne({
+    user: req.user._id,
+  }).populate("user", "fullName email role");
 
-    await profile.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      profile,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (!worker) {
+    throw new ApiError(404, "Worker profile not found");
   }
-};
-export const getMyProfile = async (req, res) => {
-  try {
-    const profile = await WorkerProfile.findOne({
-      user: req.user.id,
-    }).populate("user", "fullName email role");
 
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
+  res.status(200).json(new ApiResponse(200, "Worker profile fetched", worker));
+});
 
-    res.status(200).json({
-      success: true,
-      profile,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+// UPDATE WORKER PROFILE
+export const updateWorkerProfile = asyncHandler(async (req, res) => {
+  const updatedProfile = await Worker.findOneAndUpdate(
+    {
+      user: req.user._id,
+    },
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!updatedProfile) {
+    throw new ApiError(404, "Worker profile not found");
   }
-};
-export const getWorkerProfile = async (req, res) => {
-  try {
-    const profile = await WorkerProfile.findById(req.params.id).populate(
-      "user",
-      "fullName",
-    );
 
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Worker not found",
-      });
-    }
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Worker profile updated", updatedProfile));
+});
 
-    res.status(200).json({
-      success: true,
-      profile,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+// GET ALL WORKERS
+export const getAllWorkers = asyncHandler(async (req, res) => {
+  const { skill, location } = req.query;
+
+  const filter = {};
+
+  // FILTER BY SKILL
+  if (skill) {
+    filter.skills = {
+      $regex: skill,
+      $options: "i",
+    };
   }
-};
+
+  // FILTER BY LOCATION
+  if (location) {
+    filter.location = {
+      $regex: location,
+      $options: "i",
+    };
+  }
+
+  const workers = await Worker.find(filter)
+    .populate("user", "fullName email role")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json(new ApiResponse(200, "Workers fetched", workers));
+});
+
+// GET SINGLE WORKER
+export const getWorkerById = asyncHandler(async (req, res) => {
+  const worker = await Worker.findById(req.params.workerId).populate(
+    "user",
+    "fullName email role",
+  );
+
+  if (!worker) {
+    throw new ApiError(404, "Worker not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "Worker fetched", worker));
+});

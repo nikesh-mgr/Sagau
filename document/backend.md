@@ -1,117 +1,101 @@
-# Backend Structure
+7. Backend Architecture Overview
+   Backend Stack
+   Technologies
+   Node.js
+   Express.js
+   MongoDB
+   Mongoose
+   JWT Authentication
+   Backend Folder Structure
+   backend/
+   │
+   ├── node_modules/
+   ├── src/
+   │
+   ├── config/
+   │ └── db.js
+   │
+   ├── controllers/
+   │ ├── authController.js
+   │ ├── clientController.js
+   │ ├── workerController.js
+   │ ├── jobController.js
+   │ └── applicationController.js
+   │
+   ├── middleware/
+   │ └── authMiddleware.js
+   │
+   ├── models/
+   │ ├── userSchema.js
+   │ ├── clientSchema.js
+   │ ├── workerSchema.js
+   │ ├── jobSchema.js
+   │ └── applicationSchema.js
+   │
+   ├── routes/
+   │ ├── authRoute.js
+   │ ├── clientRoute.js
+   │ ├── workerRoute.js
+   │ ├── jobRoute.js
+   │ └── applicationRoute.js
+   │
+   ├── utils/
+   │ └── generateToken.js
+   │
+   ├── app.js
+   ├── server.js
+   │
+   ├── .env
+   ├── .gitignore
+   ├── package.json
+   └── package-lock.json
 
-backend/
--node_modules
--src
---config
----db.js
---controllers
----clientController.js
----authController.js
----workerController.js
---middleware
----authMiddleware.js
---models
----userSchema.js
----workerSchema.js
----clientSchema.js
---routes
----authRoute.js
----workerRoute.js
----clientRoute.js
---utils
----generateToken.js
---app.js
---server.js
--.env
--.gitignore
--package-lock.json
--package.json
+# backend Rest api
 
----
+/api/auth/register
+/api/auth/login
+/api/auth/me
+/api/auth/logout
 
-# Route Structure
+/api/clients/create-profile
+/api/clients/profile
+/api/clients/jobs
+/api/clients/hiring-history
 
-## Auth Routes
+/api/workers/create-profile
+/api/workers/profile
+/api/workers/upload-documents
+/api/workers/applications
+/api/workers/assigned-jobs
 
-/api/v1/auth
+/api/jobs
+/api/jobs/:jobId
+/api/jobs/:jobId/status
+/api/jobs/client/my-jobs
+/api/jobs/search
+/api/jobs/:jobId/select-worker/:workerId
 
-## client Routes
+/api/applications/:jobId
+/api/applications/job/:jobId
+/api/applications/my-applications
+/api/applications/:applicationId
 
-/api/v1/users
+/api/agreements
+/api/agreements/:agreementId
+/api/agreements/:agreementId/status
 
-## Worker Routes
+/api/reviews/:agreementId
+/api/reviews/worker/:workerId
+/api/reviews/client/:clientId
 
-/api/v1/workers
+/api/verification/request
+/api/verification/status
+/api/verification/:verificationId/approve
 
-## Job Routes
+/api/admin/users
+/api/admin/users/:userId/block
+/api/admin/users/:userId
+/api/admin/stats
 
-/api/v1/jobs
-
-## Application Routes
-
-/api/v1/applications
-
-## Agreement Routes
-
-/api/v1/agreements
-
-## Review Routes
-
-/api/v1/reviews
-
-## Verification Routes
-
-/api/v1/verification
-
-## Admin Routes
-
-/ api/v1/admin
-
----
-
-# Core Backend Layers
-
-Request
-↓
-Route
-↓
-Middleware
-↓
-Controller
-↓
-Service
-↓
-Model
-↓
-MongoDB
-
----
-
-# Important Middleware
-
-## Authentication Middleware
-
-- validates JWT
-
-## Role Middleware
-
-- protects routes by role
-
-## Upload Middleware
-
-- handles documents/images
-
-## Error Middleware
-
-- centralized error handling
-
----
-
-# Backend Principles
-
-- REST API architecture
-- scalable modular structure
-- secure authentication
-- separation of concerns
-- reusable services
+/api/notifications
+/api/notifications/:notificationId/read

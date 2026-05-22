@@ -1,92 +1,100 @@
 import User from "../models/userSchema.js";
 
-import bcrypt from "bcrypt";
-
 import generateToken from "../utils/generateToken.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
 // REGISTER USER
-export const registerUser = async (req, res) => {
-  try {
-    const { fullName, email, password, role } = req.body;
+export const register = asyncHandler(async (req, res) => {
+  const { fullName, email, password, role } = req.body;
 
-    // Check user exists
-    const userExists = await User.findOne({
-      email,
-    });
+  // CHECK EXISTING USER
+  const existingUser = await User.findOne({ email });
 
-    if (userExists) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10); //salt is a random string that is added
-    // to the password before hashing to make it more secure. The number 10 is the
-    //  cost factor, which determines how many times the hashing algorithm will be
-    // applied. A higher cost factor means more security but also more time to hash the password.
-
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role,
-    });
-
-    // Response
-    res.status(201).json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+  if (existingUser) {
+    throw new ApiError(400, "User already exists");
   }
-};
+
+  // CREATE USER
+  const user = await User.create({
+    fullName,
+    email,
+    password,
+    role,
+  });
+
+  // GENERATE TOKEN
+  const token = generateToken(user._id);
+
+  res.status(201).json(
+    new ApiResponse(201, "User registered successfully", {
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    }),
+  );
+});
 
 // LOGIN USER
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+export const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    // Find user
-    const user = await User.findOne({
-      email,
-    });
+  // FIND USER WITH PASSWORD
+  const user = await User.findOne({ email }).select("+password");
 
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid email",
-      });
-    }
-
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        message: "Invalid password",
-      });
-    }
-
-    // Response
-    res.json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+  if (!user) {
+    throw new ApiError(401, "Invalid email or password");
   }
-};
+
+  // CHECK PASSWORD
+  const isPasswordCorrect = await user.comparePassword(password);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  // CHECK ACTIVE ACCOUNT
+  if (!user.isActive) {
+    throw new ApiError(403, "Account blocked");
+  }
+
+  // UPDATE LAST LOGIN
+  user.lastLogin = new Date();
+
+  await user.save();
+
+  const token = generateToken(user._id);
+
+  res.status(200).json(
+    new ApiResponse(200, "Login successful", {
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    }),
+  );
+});
+
+// GET CURRENT USER
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
+});
+
+// LOGOUT
+export const logout = asyncHandler(async (req, res) => {
+  res.status(200).json(new ApiResponse(200, "Logout successful"));
+});
