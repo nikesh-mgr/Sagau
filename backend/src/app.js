@@ -9,6 +9,7 @@ import clientRoutes from "./routes/clientRoute.js";
 import workerRoutes from "./routes/workerRoute.js";
 import jobRoutes from "./routes/jobRoute.js";
 import applicationRoutes from "./routes/applicationRoute.js";
+import agreementRoutes from "./routes/agreementRoute.js";
 
 import errorMiddleware from "./middleware/errorMiddleware.js";
 
@@ -35,6 +36,7 @@ app.use("/api/clients", clientRoutes);
 app.use("/api/workers", workerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/agreements", agreementRoutes);
 
 // HEALTH CHECK
 app.get("/", (req, res) => {

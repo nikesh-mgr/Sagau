@@ -140,7 +140,7 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
 
   // AUTO ASSIGN WORKER
   if (status === "ACCEPTED") {
-    // REJECT OTHERS
+    // REJECT OTHER APPLICATIONS
     await Application.updateMany(
       {
         job: application.job._id,
@@ -157,6 +157,13 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     await Job.findByIdAndUpdate(application.job._id, {
       status: "IN_PROGRESS",
       selectedWorker: application.worker,
+    });
+
+    // CREATE AGREEMENT
+    await Agreement.create({
+      job: application.job._id,
+      client: application.job.client,
+      worker: application.worker,
     });
   }
 
