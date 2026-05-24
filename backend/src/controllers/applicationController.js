@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import Application from "../models/applicationSchema.js";
 import Job from "../models/jobSchema.js";
-
+import Agreement from "../models/agreementSchema.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -111,39 +111,47 @@ export const getJobApplications = asyncHandler(async (req, res) => {
 
 // UPDATE APPLICATION STATUS
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
-  const { applicationId } = req.params;
-
   const { status } = req.body;
+
+  const normalizedStatus = status.toUpperCase();
 
   // VALID STATUS
   const allowedStatuses = ["ACCEPTED", "REJECTED"];
 
-  if (!allowedStatuses.includes(status)) {
+  if (!allowedStatuses.includes(normalizedStatus)) {
     throw new ApiError(400, "Invalid application status");
   }
 
-  const application = await Application.findById(applicationId).populate("job");
+  // FIND APPLICATION
+  const application = await Application.findById(req.params.id);
 
   if (!application) {
     throw new ApiError(404, "Application not found");
   }
 
-  // OWNER CHECK
-  if (application.job.client.toString() !== req.user._id.toString()) {
+  // FIND JOB SEPARATELY
+  const job = await Job.findById(application.job);
+
+  if (!job) {
+    throw new ApiError(404, "Job not found");
+  }
+
+  // ONLY CLIENT CAN UPDATE
+  if (job.client.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "Not authorized");
   }
 
   // UPDATE APPLICATION
-  application.status = status;
+  application.status = normalizedStatus;
 
   await application.save();
 
-  // AUTO ASSIGN WORKER
-  if (status === "ACCEPTED") {
+  // IF ACCEPTED
+  if (normalizedStatus === "ACCEPTED") {
     // REJECT OTHER APPLICATIONS
     await Application.updateMany(
       {
-        job: application.job._id,
+        job: job._id,
         _id: {
           $ne: application._id,
         },
@@ -154,26 +162,30 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     );
 
     // UPDATE JOB
-    await Job.findByIdAndUpdate(application.job._id, {
-      status: "IN_PROGRESS",
-      selectedWorker: application.worker,
+    job.status = "IN_PROGRESS";
+
+    job.selectedWorker = application.worker;
+
+    await job.save();
+
+    // PREVENT DUPLICATE AGREEMENT
+    const existingAgreement = await Agreement.findOne({
+      job: job._id,
     });
 
-    // CREATE AGREEMENT
-    await Agreement.create({
-      job: application.job._id,
-      client: application.job.client,
-      worker: application.worker,
-    });
+    if (!existingAgreement) {
+      // CREATE AGREEMENT
+      await Agreement.create({
+        job: job._id,
+        client: job.client,
+        worker: application.worker,
+      });
+    }
   }
 
   res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        `Application ${status.toLowerCase()} successfully`,
-        application,
-      ),
+      new ApiResponse(200, "Application updated successfully", application),
     );
 });

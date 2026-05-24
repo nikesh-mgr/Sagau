@@ -11,31 +11,15 @@ import { protect } from "../middleware/authMiddleware.js";
 
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
 
-import validate from "../middleware/validateMiddleware.js";
-
-import { applyJobValidator } from "../validators/applicationValidator.js";
-
 const router = express.Router();
 
-// APPLY TO JOB
-router.post(
-  "/:jobId",
-  protect,
-  authorizeRoles("worker"),
-  applyJobValidator,
-  validate,
-  applyToJob,
-);
+// WORKER APPLIES TO JOB
+router.post("/apply", protect, authorizeRoles("worker"), applyToJob);
 
-// GET MY APPLICATIONS
-router.get(
-  "/my-applications",
-  protect,
-  authorizeRoles("worker"),
-  getMyApplications,
-);
+// WORKER GETS OWN APPLICATIONS
+router.get("/me", protect, authorizeRoles("worker"), getMyApplications);
 
-// GET APPLICATIONS OF JOB
+// CLIENT GETS JOB APPLICATIONS
 router.get(
   "/job/:jobId",
   protect,
@@ -43,9 +27,9 @@ router.get(
   getJobApplications,
 );
 
-// ACCEPT / REJECT APPLICATION
+// CLIENT ACCEPTS / REJECTS APPLICATION
 router.patch(
-  "/:applicationId",
+  "/:id/status",
   protect,
   authorizeRoles("client"),
   updateApplicationStatus,

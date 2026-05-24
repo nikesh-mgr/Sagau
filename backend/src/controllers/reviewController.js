@@ -1,76 +1,132 @@
 import Review from "../models/reviewSchema.js";
-import Job from "../models/jobSchema.js";
+import Agreement from "../models/agreementSchema.js";
+import User from "../models/userSchema.js";
 
-/**
- * CREATE REVIEW
- * Only allowed after job is COMPLETED
- */
-export const createReview = async (req, res) => {
-  try {
-    const { jobId, rating, comment } = req.body;
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
-    const job = await Job.findById(jobId);
+// CREATE REVIEW
+export const createReview = asyncHandler(async (req, res) => {
+  const { agreementId } = req.params;
 
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
+  const { rating, comment } = req.body;
 
-    // only allow review if job is completed
-    if (job.status !== "COMPLETED") {
-      return res.status(400).json({
-        message: "Job must be completed before review",
-      });
-    }
+  // FIND AGREEMENT
+  const agreement = await Agreement.findById(agreementId);
 
-    // prevent duplicate review by same user
-    const existing = await Review.findOne({
-      job: jobId,
-      reviewer: req.user._id,
-    });
-
-    if (existing) {
-      return res.status(400).json({
-        message: "You already reviewed this job",
-      });
-    }
-
-    const review = await Review.create({
-      job: jobId,
-      reviewer: req.user._id,
-      reviewee: req.user.role === "client" ? job.selectedWorker : job.client,
-      rating,
-      comment,
-    });
-
-    res.status(201).json({
-      success: true,
-      review,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (!agreement) {
+    throw new ApiError(404, "Agreement not found");
   }
-};
-export const getUserReviews = async (req, res) => {
-  try {
-    const userId = req.params.userId;
 
-    const reviews = await Review.find({ reviewee: userId })
-      .populate("reviewer", "fullName role")
-      .sort({ createdAt: -1 });
+  // AGREEMENT MUST BE COMPLETED
+  if (agreement.status !== "COMPLETED") {
+    throw new ApiError(400, "Review allowed only after agreement completion");
+  }
 
-    const avgRating =
-      reviews.reduce((acc, r) => acc + r.rating, 0) / (reviews.length || 1);
+  // ONLY PARTICIPANTS CAN REVIEW
+  const isParticipant =
+    agreement.client.toString() === req.user._id.toString() ||
+    agreement.worker.toString() === req.user._id.toString();
 
-    res.json({
-      success: true,
+  if (!isParticipant) {
+    throw new ApiError(403, "Unauthorized access");
+  }
+
+  // PREVENT DUPLICATE REVIEW
+  const alreadyReviewed = await Review.findOne({
+    agreement: agreementId,
+    reviewer: req.user._id,
+  });
+
+  if (alreadyReviewed) {
+    throw new ApiError(409, "You already reviewed this agreement");
+  }
+
+  // DETERMINE REVIEW TARGET
+  let reviewee;
+
+  if (req.user._id.toString() === agreement.client.toString()) {
+    reviewee = agreement.worker;
+  } else {
+    reviewee = agreement.client;
+  }
+
+  // CREATE REVIEW
+  const review = await Review.create({
+    agreement: agreementId,
+    reviewer: req.user._id,
+    reviewee,
+    rating,
+    comment,
+  });
+
+  // UPDATE USER RATING
+  const reviews = await Review.find({
+    reviewee,
+  });
+
+  const avgRating =
+    reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length;
+
+  await User.findByIdAndUpdate(reviewee, {
+    rating: avgRating.toFixed(1),
+    totalReviews: reviews.length,
+  });
+
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Review submitted successfully", review));
+});
+
+// GET WORKER REVIEWS
+export const getWorkerReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({
+    reviewee: req.params.workerId,
+  })
+    .populate("reviewer", "fullName role")
+    .sort({
+      createdAt: -1,
+    });
+
+  const avgRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length
+        ).toFixed(1)
+      : 0;
+
+  res.status(200).json(
+    new ApiResponse(200, "Worker reviews fetched successfully", {
       totalReviews: reviews.length,
-      averageRating: avgRating.toFixed(1),
+      averageRating: avgRating,
       reviews,
+    }),
+  );
+});
+
+// GET CLIENT REVIEWS
+export const getClientReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({
+    reviewee: req.params.clientId,
+  })
+    .populate("reviewer", "fullName role")
+    .sort({
+      createdAt: -1,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+
+  const avgRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length
+        ).toFixed(1)
+      : 0;
+
+  res.status(200).json(
+    new ApiResponse(200, "Client reviews fetched successfully", {
+      totalReviews: reviews.length,
+      averageRating: avgRating,
+      reviews,
+    }),
+  );
+});
