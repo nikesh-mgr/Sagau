@@ -14,7 +14,6 @@ import { createReviewValidator } from "../validators/reviewValidator.js";
 
 const router = express.Router();
 
-// CREATE REVIEW
 router.post(
   "/:agreementId",
   protect,
@@ -23,10 +22,8 @@ router.post(
   createReview,
 );
 
-// GET WORKER REVIEWS
 router.get("/worker/:workerId", getWorkerReviews);
 
-// GET CLIENT REVIEWS
 router.get("/client/:clientId", getClientReviews);
 
 export default router;
