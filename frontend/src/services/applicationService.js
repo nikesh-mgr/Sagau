@@ -14,7 +14,7 @@ import { authorizeRoles } from "../middleware/roleMiddleware.js";
 const router = express.Router();
 
 // WORKER APPLIES TO JOB
-router.post("/apply/:jobId", protect, authorizeRoles("worker"), applyToJob);
+router.post("/apply", protect, authorizeRoles("worker"), applyToJob);
 
 // WORKER GETS OWN APPLICATIONS
 router.get("/me", protect, authorizeRoles("worker"), getMyApplications);

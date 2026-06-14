@@ -1,5 +1,5 @@
 import Agreement from "../models/agreementSchema.js";
-
+import Job from "../models/jobSchema.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -79,6 +79,10 @@ export const updateAgreementStatus = asyncHandler(async (req, res) => {
   // COMPLETION DATE
   if (status === "COMPLETED") {
     agreement.completedAt = new Date();
+
+    await Job.findByIdAndUpdate(agreement.job, {
+      status: "COMPLETED",
+    });
   }
 
   await agreement.save();
