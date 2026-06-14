@@ -1,6 +1,0 @@
-export const JOB_STATUS = {
-  OPEN: "OPEN",
-  IN_PROGRESS: "IN_PROGRESS",
-  COMPLETED: "COMPLETED",
-  CLOSED: "CLOSED",
-};
