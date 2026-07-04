@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 import Application from "../models/applicationSchema.js";
 import Job from "../models/jobSchema.js";
+import Worker from "../models/workerSchema.js";
 import Agreement from "../models/agreementSchema.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
@@ -89,26 +90,42 @@ export const getJobApplications = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Job not found");
   }
 
-  // OWNER CHECK
   if (job.client.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "You can only view your job applications");
+    throw new ApiError(403, "Unauthorized");
   }
 
   const applications = await Application.find({
     job: jobId,
   })
-    .populate("worker", "fullName email role rating")
+    .populate("worker", "fullName email")
     .sort({
       createdAt: -1,
     });
 
-  res
+  const formattedApplications = await Promise.all(
+    applications.map(async (application) => {
+      const workerProfile = await Worker.findOne({
+        user: application.worker._id,
+      });
+
+      return {
+        ...application.toObject(),
+
+        workerProfile,
+      };
+    }),
+  );
+
+  return res
     .status(200)
     .json(
-      new ApiResponse(200, "Applications fetched successfully", applications),
+      new ApiResponse(
+        200,
+        "Applications fetched successfully",
+        formattedApplications,
+      ),
     );
 });
-
 // UPDATE APPLICATION STATUS
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;

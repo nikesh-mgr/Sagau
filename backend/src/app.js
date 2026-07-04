@@ -49,5 +49,12 @@ app.get("/", (req, res) => {
 
 // ERROR MIDDLEWARE
 app.use(errorMiddleware);
+// 404 API
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API Route Not Found",
+  });
+});
 
 export default app;

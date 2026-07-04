@@ -1,113 +1,95 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
-
-import { registerSchema } from "../../features/auth/schemas/authSchemas";
-import { registerUser } from "../../features/auth/services/authService";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import useAuthStore from "../../store/authStore";
+
+import { successToast, errorToast } from "../../utils/toast";
 
 const Register = () => {
   const navigate = useNavigate();
 
-  const { setAuth } = useAuthStore();
+  const register = useAuthStore((state) => state.register);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      role: "client",
-    },
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    role: "client",
   });
 
-  const onSubmit = async (data) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     try {
-      const response = await registerUser(data);
+      const response = await register(formData);
 
-      const authData = response.data;
+      successToast(response.data.message);
 
-      setAuth({
-        token: authData.token,
-        user: authData.user,
-      });
-
-      toast.success(response.message);
-      if (authData.user.role === "client") {
-        navigate("/client/create-profile");
-      } else if (authData.user.role === "worker") {
-        navigate("/worker/create-profile");
-      } else {
-        navigate("/");
-      }
+      navigate("/login");
     } catch (error) {
-      if (error.response?.data?.errors) {
-        error.response.data.errors.forEach((err) => toast.error(err.msg));
+      console.log("REGISTER ERROR");
 
-        return;
-      }
+      console.log(error.response?.data);
 
-      toast.error(error.response?.data?.message || "Registration failed");
+      errorToast(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Registration Failed",
+      );
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-slate-100">
+    <div className="min-h-screen flex items-center justify-center">
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded-xl shadow-md w-[450px]"
       >
-        <h1 className="text-3xl font-bold mb-6">Register</h1>
+        <h2 className="text-2xl font-bold mb-6">Register</h2>
 
         <input
+          name="fullName"
           placeholder="Full Name"
-          {...register("fullName")}
-          className="w-full border p-3 rounded mb-2"
+          className="w-full border p-3 mb-4 rounded"
+          onChange={handleChange}
         />
 
-        <p className="text-red-500 text-sm mb-3">{errors.fullName?.message}</p>
-
         <input
+          name="email"
+          type="email"
           placeholder="Email"
-          {...register("email")}
-          className="w-full border p-3 rounded mb-2"
+          className="w-full border p-3 mb-4 rounded"
+          onChange={handleChange}
         />
 
-        <p className="text-red-500 text-sm mb-3">{errors.email?.message}</p>
-
         <input
+          name="password"
           type="password"
           placeholder="Password"
-          {...register("password")}
-          className="w-full border p-3 rounded mb-2"
+          className="w-full border p-3 mb-4 rounded"
+          onChange={handleChange}
         />
 
-        <p className="text-red-500 text-sm mb-3">{errors.password?.message}</p>
-
         <select
-          {...register("role")}
-          className="w-full border p-3 rounded mb-4"
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          className="w-full border p-3 mb-4 rounded"
         >
           <option value="client">Client</option>
           <option value="worker">Worker</option>
         </select>
 
-        <button
-          disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white p-3 rounded"
-        >
-          {isSubmitting ? "Creating..." : "Register"}
+        <button className="w-full bg-green-600 text-white py-3 rounded">
+          Register
         </button>
-
-        <p className="mt-4 text-center">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600">
-            Login
-          </Link>
-        </p>
       </form>
     </div>
   );

@@ -1,61 +1,79 @@
 import { create } from "zustand";
-import { getCurrentUser } from "../features/auth/services/authService";
 
-const useAuthStore = create((set, get) => ({
+import { loginUser, registerUser, getCurrentUser } from "../api/authApi";
+
+import { saveToken, getToken, removeToken } from "../utils/token";
+
+const useAuthStore = create((set) => ({
   user: null,
-  token: localStorage.getItem("token"),
-  isAuthenticated: false,
-  isLoading: true,
+  token: getToken(),
+  loading: false,
 
-  setAuth: ({ user, token }) => {
-    localStorage.setItem("token", token);
+  // REGISTER
+  register: async (formData) => {
+    const response = await registerUser(formData);
+
+    const token = response.data.data.token;
+    const user = response.data.data.user;
+
+    saveToken(token);
 
     set({
-      user,
       token,
-      isAuthenticated: true,
-      isLoading: false,
+      user,
     });
+
+    return response;
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
+  // LOGIN
+  login: async (credentials) => {
+    const response = await loginUser(credentials);
+
+    const token = response.data.data.token;
+    const user = response.data.data.user;
+
+    saveToken(token);
 
     set({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
+      token,
+      user,
     });
+
+    return response;
   },
 
-  // 🔥 IMPORTANT: session restore
+  // LOAD USER
   loadUser: async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
-      if (!token) {
-        set({ isLoading: false });
-        return;
-      }
+      if (!token) return;
 
       const response = await getCurrentUser();
 
       set({
-        user: response.data,
-        isAuthenticated: true,
-        isLoading: false,
+        user: response.data.data,
+        token,
       });
     } catch (error) {
-      localStorage.removeItem("token");
+      removeToken();
 
       set({
         user: null,
         token: null,
-        isAuthenticated: false,
-        isLoading: false,
       });
     }
+  },
+
+  // LOGOUT
+  logout: () => {
+    removeToken();
+
+    set({
+      user: null,
+      token: null,
+    });
   },
 }));
 

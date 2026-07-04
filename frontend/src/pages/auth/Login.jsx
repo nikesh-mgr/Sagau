@@ -1,101 +1,126 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-import { loginSchema } from "../../features/auth/schemas/authSchemas";
-import { loginUser } from "../../features/auth/services/authService";
-
 import useAuthStore from "../../store/authStore";
+import useWorkerStore from "../../store/workerStore";
+
+import { successToast, errorToast } from "../../utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const { setAuth } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
+  const fetchWorkerProfile = useWorkerStore((state) => state.fetchProfile);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
 
-  const onSubmit = async (data) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+
     try {
-      const response = await loginUser(data);
+      const response = await login(formData);
 
-      const authData = response.data;
+      console.log("LOGIN RESPONSE:", response);
 
-      setAuth({
-        token: authData.token,
-        user: authData.user,
-      });
+      const data = response?.data?.data;
+      const user = data?.user;
 
-      toast.success(response.message);
-      switch (authData.user.role) {
-        case "client":
-          navigate("/client/create-profile");
-          break;
+      successToast(response?.data?.message);
 
-        case "worker":
-          navigate("/worker/create-profile");
-          break;
-
-        case "admin":
-          navigate("/admin/dashboard");
-          break;
-
-        default:
-          navigate("/");
+      if (user?.role === "client") {
+        navigate("/client");
+        return;
       }
-    } catch (error) {
-      if (error.response?.data?.errors) {
-        error.response.data.errors.forEach((err) => toast.error(err.msg));
+
+      if (user?.role === "worker") {
+        try {
+          // Check whether worker profile already exists
+          await fetchWorkerProfile();
+
+          // Profile exists
+          navigate("/worker");
+        } catch (error) {
+          // Profile doesn't exist
+          if (
+            error?.response?.status === 404 ||
+            error?.response?.status === 400
+          ) {
+            navigate("/worker/profile/create");
+          } else {
+            console.error(error);
+            navigate("/worker");
+          }
+        }
 
         return;
       }
 
-      toast.error(error.response?.data?.message || "Login failed");
+      navigate("/");
+    } catch (error) {
+      console.error("LOGIN ERROR:", error);
+
+      errorToast(
+        error?.response?.data?.message || error?.message || "Login Failed",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
+        onSubmit={handleSubmit}
+        className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md"
       >
-        <h1 className="text-3xl font-bold mb-6">Login</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
 
         <input
           type="email"
+          name="email"
           placeholder="Email"
-          {...register("email")}
-          className="w-full border p-3 rounded mb-2"
+          value={formData.email}
+          onChange={handleChange}
+          className="w-full border rounded-lg p-3 mb-4"
+          required
         />
-
-        <p className="text-red-500 text-sm mb-3">{errors.email?.message}</p>
 
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          {...register("password")}
-          className="w-full border p-3 rounded mb-2"
+          value={formData.password}
+          onChange={handleChange}
+          className="w-full border rounded-lg p-3 mb-6"
+          required
         />
 
-        <p className="text-red-500 text-sm mb-3">{errors.password?.message}</p>
-
         <button
-          disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white p-3 rounded"
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-3 disabled:bg-gray-400"
         >
-          {isSubmitting ? "Logging in..." : "Login"}
+          {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="mt-4 text-center">
-          Don't have an account?{" "}
-          <Link to="/register" className="text-blue-600">
+        <p className="text-center mt-6">
+          Don't have an account?
+          <Link to="/register" className="text-blue-600 font-semibold ml-2">
             Register
           </Link>
         </p>

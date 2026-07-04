@@ -14,6 +14,11 @@ import { createReviewValidator } from "../validators/reviewValidator.js";
 
 const router = express.Router();
 
+/*
+POST
+/api/reviews/:agreementId
+*/
+
 router.post(
   "/:agreementId",
   protect,
@@ -22,7 +27,17 @@ router.post(
   createReview,
 );
 
+/*
+GET
+/api/reviews/worker/:workerId
+*/
+
 router.get("/worker/:workerId", getWorkerReviews);
+
+/*
+GET
+/api/reviews/client/:clientId
+*/
 
 router.get("/client/:clientId", getClientReviews);
 
