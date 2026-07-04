@@ -6,10 +6,12 @@ import MyJobs from "../pages/client/MyJobs";
 import Home from "../pages/public/Home";
 import NotFound from "../pages/public/NotFound";
 import MyApplications from "../pages/worker/MyApplications";
+import AgreementDetails from "../pages/common/AgreementDetails";
 import PrivateRoute from "./PrivateRoute";
 import WorkerJobDetails from "../pages/worker/WorkerJobDetails";
 import BrowseJobs from "../pages/worker/BrowseJobs";
 import ViewJob from "../pages/client/ViewJob";
+import MyAgreements from "../pages/client/MyAgreements";
 import EditJob from "../pages/client/EditJob";
 import JobApplications from "../pages/client/JobApplications";
 // ---------------- CLIENT ----------------
@@ -19,12 +21,13 @@ import CreateProfile from "../pages/client/CreateProfile";
 import Profile from "../pages/client/Profile";
 import EditProfile from "../pages/client/EditProfile";
 import CreateJob from "../pages/client/CreateJob";
-
+import LeaveReview from "../pages/shared/LeaveReview";
 // ---------------- WORKER ----------------
 import WorkerDashboard from "../pages/worker/WorkerDashboard";
 import WorkerCreateProfile from "../pages/worker/CreateProfile";
-import WorkerProfile from "../pages/worker/Profile";
+import WorkerProfile from "../pages/worker/WorkerProfile";
 import WorkerEditProfile from "../pages/worker/EditProfile";
+import WorkerAgreements from "../pages/worker/MyAgreements";
 
 const AppRoutes = () => {
   return (
@@ -69,6 +72,7 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+      <Route path="/client/agreements" element={<MyAgreements />} />
       <Route
         path="/client/jobs"
         element={
@@ -129,9 +133,17 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/client/agreements/:agreementId"
+        element={<AgreementDetails />}
+      />
 
+      <Route
+        path="/worker/agreements/:agreementId"
+        element={<AgreementDetails />}
+      />
       {/* ================= WORKER ================= */}
-
+      <Route path="/worker/agreements" element={<WorkerAgreements />} />
       <Route
         path="/worker"
         element={
@@ -199,6 +211,7 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+      <Route path="/review/:agreementId" element={<LeaveReview />} />
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>

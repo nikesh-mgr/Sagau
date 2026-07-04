@@ -8,83 +8,66 @@ import {
 
 const useReviewStore = create((set) => ({
   reviews: [],
-
-  averageRating: 0,
-
-  totalReviews: 0,
-
-  reputationScore: 0,
-
+  summary: {},
   loading: false,
 
+  submitReview: async (agreementId, data) => {
+    set({ loading: true });
+
+    try {
+      const res = await createReview(agreementId, data);
+
+      set({ loading: false });
+
+      return res.data;
+    } catch (error) {
+      set({ loading: false });
+
+      throw error;
+    }
+  },
+
   fetchWorkerReviews: async (workerId) => {
-    set({
-      loading: true,
-    });
+    set({ loading: true });
 
     try {
       const res = await getWorkerReviews(workerId);
 
       set({
         reviews: res.data.reviews,
-        averageRating: res.data.averageRating,
-        totalReviews: res.data.totalReviews,
-        reputationScore: res.data.reputationScore,
+        summary: {
+          averageRating: res.data.averageRating,
+          totalReviews: res.data.totalReviews,
+        },
         loading: false,
       });
 
       return res.data;
     } catch (error) {
-      set({
-        loading: false,
-      });
+      set({ loading: false });
 
       throw error;
     }
   },
 
   fetchClientReviews: async (clientId) => {
-    set({
-      loading: true,
-    });
+    set({ loading: true });
 
     try {
       const res = await getClientReviews(clientId);
 
       set({
         reviews: res.data.reviews,
-        averageRating: res.data.averageRating,
-        totalReviews: res.data.totalReviews,
+        summary: {
+          averageRating: res.data.averageRating,
+          totalReviews: res.data.totalReviews,
+        },
         loading: false,
       });
 
       return res.data;
     } catch (error) {
-      set({
-        loading: false,
-      });
-
-      throw error;
-    }
-  },
-
-  submitReview: async (agreementId, reviewData) => {
-    set({
-      loading: true,
-    });
-
-    try {
-      const res = await createReview(agreementId, reviewData);
-
-      set({
-        loading: false,
-      });
-
-      return res.data;
-    } catch (error) {
-      set({
-        loading: false,
-      });
+      set({ loading: false });
 
       throw error;
     }

@@ -7,7 +7,7 @@ import {
   FaClipboardList,
   FaSignOutAlt,
 } from "react-icons/fa";
-
+import { FaFileContract } from "react-icons/fa";
 import useAuthStore from "../../store/authStore";
 const WorkerSidebar = () => {
   const location = useLocation();
@@ -35,6 +35,11 @@ const WorkerSidebar = () => {
       title: "My Applications",
       path: "/worker/applications",
       icon: <FaClipboardList />,
+    },
+    {
+      title: "MyAgreements",
+      path: "/worker/agreements",
+      icon: <FaFileContract />,
     },
   ];
 

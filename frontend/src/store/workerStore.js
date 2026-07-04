@@ -8,8 +8,11 @@ import {
 } from "../api/workerApi";
 
 const useWorkerStore = create((set) => ({
+  // =========================
+  // STATE
+  // =========================
   profile: null,
-  worker: null,
+  selectedWorker: null,
   loading: false,
 
   // =========================
@@ -89,20 +92,28 @@ const useWorkerStore = create((set) => ({
       const res = await getWorkerById(workerId);
 
       set({
-        worker: res.data,
+        selectedWorker: res.data,
         loading: false,
       });
 
-      return res;
+      return res.data;
     } catch (error) {
       set({
-        worker: null,
+        selectedWorker: null,
         loading: false,
       });
 
       throw error;
     }
   },
+
+  // =========================
+  // CLEAR
+  // =========================
+  clearSelectedWorker: () =>
+    set({
+      selectedWorker: null,
+    }),
 }));
 
 export default useWorkerStore;

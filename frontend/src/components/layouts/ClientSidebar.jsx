@@ -6,6 +6,7 @@ import {
   FaCog,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { FaFileContract } from "react-icons/fa";
 
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -38,9 +39,9 @@ const ClientSidebar = () => {
       icon: <FaPlusCircle />,
     },
     {
-      title: "Settings",
-      path: "/client/settings",
-      icon: <FaCog />,
+      title: "My Agreements",
+      path: "/client/agreements",
+      icon: <FaFileContract />,
     },
   ];
 
