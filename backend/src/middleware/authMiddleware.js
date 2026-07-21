@@ -6,23 +6,18 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 
 export const protect = asyncHandler(async (req, res, next) => {
-  let token;
-
   const authHeader = req.headers.authorization;
 
-  // CHECK TOKEN
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1];
-  }
-
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new ApiError(401, "Not authorized, token missing");
   }
 
-  // VERIFY TOKEN
+  const token = authHeader.split(" ")[1];
+
+  // Verify JWT
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  // FIND USER
+  // Get authenticated user
   const user = await User.findById(decoded.id);
 
   if (!user) {

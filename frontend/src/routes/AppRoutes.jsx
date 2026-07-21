@@ -1,221 +1,206 @@
-import { Routes, Route } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import RoleRoute from "./RoleRoute";
 
+import ClientLayout from "../layouts/ClientLayout";
+import WorkerLayout from "../layouts/WorkerLayout";
+import AdminLayout from "../layouts/AdminLayout";
+import ClientProfile from "../pages/client/ClientProfile";
+import ClientDashboard from "../pages/client/ClientDashboard";
+import WorkerDashboard from "../pages/worker/WorkerDashboard";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AuthLayout from "../layouts/AuthLayout";
+import PublicLayout from "../layouts/PublicLayout";
+import CreateJob from "../pages/client/CreateJob";
+import MyJobs from "../pages/client/MyJobs";
+import EditJob from "../pages/client/EditJob";
+import Home from "../pages/public/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
-import MyJobs from "../pages/client/MyJobs";
-import Home from "../pages/public/Home";
-import NotFound from "../pages/public/NotFound";
-import MyApplications from "../pages/worker/MyApplications";
-import AgreementDetails from "../pages/common/AgreementDetails";
-import PrivateRoute from "./PrivateRoute";
+import JobDetails from "../pages/client/JobDetails";
+import BrowseJobs from "../pages/worker/BrowseJob";
 import WorkerJobDetails from "../pages/worker/WorkerJobDetails";
-import BrowseJobs from "../pages/worker/BrowseJobs";
-import ViewJob from "../pages/client/ViewJob";
-import MyAgreements from "../pages/client/MyAgreements";
-import EditJob from "../pages/client/EditJob";
-import JobApplications from "../pages/client/JobApplications";
-// ---------------- CLIENT ----------------
-import ClientWorkerProfile from "../pages/client/WorkerProfile";
-import ClientDashboard from "../pages/client/ClientDashboard";
-import CreateProfile from "../pages/client/CreateProfile";
-import Profile from "../pages/client/Profile";
-import EditProfile from "../pages/client/EditProfile";
-import CreateJob from "../pages/client/CreateJob";
-import LeaveReview from "../pages/shared/LeaveReview";
-// ---------------- WORKER ----------------
-import WorkerDashboard from "../pages/worker/WorkerDashboard";
-import WorkerCreateProfile from "../pages/worker/CreateProfile";
-import WorkerProfile from "../pages/worker/WorkerProfile";
-import WorkerEditProfile from "../pages/worker/EditProfile";
-import WorkerAgreements from "../pages/worker/MyAgreements";
+import ApplyJob from "../pages/worker/ApplyJob";
+import MyApplications from "../pages/worker/MyApplications";
+import ClientApplication from "../pages/client/Applications";
+import JobApplicants from "../pages/client/JobApplicants";
+import ClientAgreements from "../pages/client/Agreements";
+import WorkerAgreements from "../pages/worker/Agreements";
+import AgreementDetails from "../pages/client/AgreementDetails";
+import WorkerAgreementDetails from "../pages/worker/AgreementDetails";
+import WorkerReviews from "../pages/worker/Reviews";
+import WorkerProfile from "../pages/worker/Profile";
+import ClientReviews from "../pages/client/MyReviews";
+const router = createBrowserRouter([
+  {
+    path: "/",
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    element: <PublicLayout />,
 
-      {/* ================= CLIENT ================= */}
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+    ],
+  },
+  {
+    path: "/auth",
 
-      <Route
-        path="/client"
-        element={
-          <PrivateRoute>
-            <ClientDashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/workers/:workerId"
-        element={
-          <PrivateRoute>
-            <ClientWorkerProfile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/profile/create"
-        element={
-          <PrivateRoute>
-            <CreateProfile />
-          </PrivateRoute>
-        }
-      />
+    element: <AuthLayout />,
 
-      <Route
-        path="/client/profile"
-        element={
-          <PrivateRoute>
-            <Profile />
-          </PrivateRoute>
-        }
-      />
-      <Route path="/client/agreements" element={<MyAgreements />} />
-      <Route
-        path="/client/jobs"
-        element={
-          <PrivateRoute>
-            <MyJobs />
-          </PrivateRoute>
-        }
-      />
+    children: [
+      {
+        path: "login",
+        element: <Login />,
+      },
 
-      <Route
-        path="/client/jobs/:jobId"
-        element={
-          <PrivateRoute>
-            <ViewJob />
-          </PrivateRoute>
-        }
-      />
+      {
+        path: "register",
+        element: <Register />,
+      },
+    ],
+  },
+  {
+    path: "/",
 
-      <Route
-        path="/client/jobs/edit/:jobId"
-        element={
-          <PrivateRoute>
-            <EditJob />
-          </PrivateRoute>
-        }
-      />
+    element: <ProtectedRoute />,
 
-      <Route
-        path="/client/profile/edit"
-        element={
-          <PrivateRoute>
-            <EditProfile />
-          </PrivateRoute>
-        }
-      />
+    children: [
+      {
+        path: "client",
 
-      <Route
-        path="/client/jobs/create"
-        element={
-          <PrivateRoute>
-            <CreateJob />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/jobs/create"
-        element={
-          <PrivateRoute>
-            <CreateJob />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/jobs"
-        element={
-          <PrivateRoute>
-            <MyJobs />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/agreements/:agreementId"
-        element={<AgreementDetails />}
-      />
+        element: <RoleRoute role="client" />,
 
-      <Route
-        path="/worker/agreements/:agreementId"
-        element={<AgreementDetails />}
-      />
-      {/* ================= WORKER ================= */}
-      <Route path="/worker/agreements" element={<WorkerAgreements />} />
-      <Route
-        path="/worker"
-        element={
-          <PrivateRoute>
-            <WorkerDashboard />
-          </PrivateRoute>
-        }
-      />
+        children: [
+          {
+            element: <ClientLayout />,
 
-      <Route
-        path="/worker/profile/create"
-        element={
-          <PrivateRoute>
-            <WorkerCreateProfile />
-          </PrivateRoute>
-        }
-      />
+            children: [
+              {
+                path: "dashboard",
 
-      <Route
-        path="/worker/profile"
-        element={
-          <PrivateRoute>
-            <WorkerProfile />
-          </PrivateRoute>
-        }
-      />
+                element: <ClientDashboard />,
+              },
+              {
+                path: "profile",
+                element: <ClientProfile />,
+              },
+              {
+                path: "jobs",
+                element: <MyJobs />,
+              },
 
-      <Route
-        path="/worker/profile/edit"
-        element={
-          <PrivateRoute>
-            <WorkerEditProfile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/worker/jobs"
-        element={
-          <PrivateRoute>
-            <BrowseJobs />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/worker/applications"
-        element={
-          <PrivateRoute>
-            <MyApplications />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/client/jobs/:jobId/applications"
-        element={
-          <PrivateRoute>
-            <JobApplications />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/worker/jobs/:jobId"
-        element={
-          <PrivateRoute>
-            <WorkerJobDetails />
-          </PrivateRoute>
-        }
-      />
-      <Route path="/review/:agreementId" element={<LeaveReview />} />
-      {/* 404 */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+              {
+                path: "jobs/create",
+                element: <CreateJob />,
+              },
+              {
+                path: "jobs/:id",
+                element: <JobDetails />,
+              },
+              {
+                path: "jobs/edit/:id",
+                element: <EditJob />,
+              },
+              {
+                path: "jobs/:jobId/applicants",
+                element: <JobApplicants />,
+              },
+              {
+                path: "applications",
+                element: <ClientApplication />,
+              },
+              {
+                path: "agreements",
+                element: <ClientAgreements />,
+              },
+              {
+                path: "agreements/:agreementId",
+                element: <AgreementDetails />,
+              },
+              {
+                path: "reviews",
+                element: <ClientReviews />,
+              },
+            ],
+          },
+        ],
+      },
 
-export default AppRoutes;
+      {
+        path: "worker",
+
+        element: <RoleRoute role="worker" />,
+
+        children: [
+          {
+            element: <WorkerLayout />,
+
+            children: [
+              {
+                path: "dashboard",
+
+                element: <WorkerDashboard />,
+              },
+              {
+                path: "jobs",
+                element: <BrowseJobs />,
+              },
+              {
+                path: "jobs/:id",
+                element: <WorkerJobDetails />,
+              },
+              {
+                path: "jobs/:jobId/apply",
+                element: <ApplyJob />,
+              },
+              {
+                path: "applications",
+                element: <MyApplications />,
+              },
+              {
+                path: "agreements",
+                element: <WorkerAgreements />,
+              },
+              {
+                path: "agreements/:agreementId",
+                element: <WorkerAgreementDetails />,
+              },
+              {
+                path: "reviews",
+                element: <WorkerReviews />,
+              },
+              {
+                path: "profile",
+                element: <WorkerProfile />,
+              },
+            ],
+          },
+        ],
+      },
+
+      {
+        path: "admin",
+
+        element: <RoleRoute role="admin" />,
+
+        children: [
+          {
+            element: <AdminLayout />,
+
+            children: [
+              {
+                path: "dashboard",
+
+                element: <AdminDashboard />,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);
+
+export default router;

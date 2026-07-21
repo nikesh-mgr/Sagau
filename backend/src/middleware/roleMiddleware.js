@@ -1,6 +1,6 @@
 import ApiError from "../utils/ApiError.js";
 
-// ROLE AUTHORIZATION
+// Restrict access based on user role
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

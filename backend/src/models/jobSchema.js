@@ -11,6 +11,7 @@ const jobSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
@@ -23,12 +24,18 @@ const jobSchema = new mongoose.Schema(
       required: true,
     },
 
-    skillsRequired: {
-      type: [String],
+    skillsRequired: [
+      {
+        type: String,
+      },
+    ],
+
+    location: {
+      type: String,
       required: true,
     },
 
-    location: {
+    category: {
       type: String,
       required: true,
     },
@@ -38,13 +45,9 @@ const jobSchema = new mongoose.Schema(
       required: true,
     },
 
-    category: {
-      type: String,
-      required: true,
-    },
     status: {
       type: String,
-      enum: ["OPEN", "IN_PROGRESS", "COMPLETED", "CLOSED"],
+      enum: ["OPEN", "IN_PROGRESS", "COMPLETED", "CLOSED", "EXPIRED"],
       default: "OPEN",
     },
 
@@ -53,8 +56,19 @@ const jobSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+
+    expiresAt: {
+      type: Date,
+      default: function () {
+        return this.deadline;
+      },
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-export default mongoose.model("Job", jobSchema);
+const Job = mongoose.model("Job", jobSchema);
+
+export default Job;

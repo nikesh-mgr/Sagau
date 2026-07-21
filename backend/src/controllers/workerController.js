@@ -4,9 +4,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
-// CREATE WORKER PROFILE
+// Create worker profile
 export const createWorkerProfile = asyncHandler(async (req, res) => {
-  // CHECK EXISTING PROFILE
   const existingProfile = await Worker.findOne({
     user: req.user._id,
   });
@@ -15,7 +14,6 @@ export const createWorkerProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Worker profile already exists");
   }
 
-  // CREATE PROFILE
   const worker = await Worker.create({
     user: req.user._id,
     skills: req.body.skills,
@@ -30,7 +28,7 @@ export const createWorkerProfile = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, "Worker profile created", worker));
 });
 
-// GET MY PROFILE
+// Get logged-in worker profile
 export const getMyWorkerProfile = asyncHandler(async (req, res) => {
   const worker = await Worker.findOne({
     user: req.user._id,
@@ -43,7 +41,7 @@ export const getMyWorkerProfile = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Worker profile fetched", worker));
 });
 
-// UPDATE WORKER PROFILE
+// Update worker profile
 export const updateWorkerProfile = asyncHandler(async (req, res) => {
   const updatedProfile = await Worker.findOneAndUpdate(
     {
@@ -65,13 +63,12 @@ export const updateWorkerProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Worker profile updated", updatedProfile));
 });
 
-// GET ALL WORKERS
+// Get all workers
 export const getAllWorkers = asyncHandler(async (req, res) => {
   const { skill, location } = req.query;
 
   const filter = {};
 
-  // FILTER BY SKILL
   if (skill) {
     filter.skills = {
       $regex: skill,
@@ -79,7 +76,6 @@ export const getAllWorkers = asyncHandler(async (req, res) => {
     };
   }
 
-  // FILTER BY LOCATION
   if (location) {
     filter.location = {
       $regex: location,
@@ -94,7 +90,7 @@ export const getAllWorkers = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Workers fetched", workers));
 });
 
-// GET SINGLE WORKER
+// Get worker by ID
 export const getWorkerById = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.params.workerId).populate(
     "user",

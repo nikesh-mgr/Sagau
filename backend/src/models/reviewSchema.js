@@ -39,6 +39,7 @@ const reviewSchema = new mongoose.Schema(
   },
 );
 
+// Prevent duplicate reviews for the same agreement
 reviewSchema.index(
   {
     agreement: 1,
@@ -49,8 +50,11 @@ reviewSchema.index(
   },
 );
 
+// Optimize review lookup by reviewee
 reviewSchema.index({
   reviewee: 1,
 });
 
-export default mongoose.model("Review", reviewSchema);
+const Review = mongoose.model("Review", reviewSchema);
+
+export default Review;

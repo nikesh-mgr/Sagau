@@ -1,37 +1,43 @@
 import { Link } from "react-router-dom";
 
-import desktop404 from "../../assests/404d.png";
-import mobile404 from "../../assests/404m.png";
+import { FiArrowLeft, FiHome } from "react-icons/fi";
 
-export default function NotFound() {
+const NotFound = () => {
   return (
-    <div className="relative h-screen w-full overflow-hidden">
-      {/* Desktop Image */}
-      <img
-        src={desktop404}
-        alt="404 Not Found"
-        className="hidden md:block h-full w-full object-cover"
-      />
+    <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="text-center max-w-lg">
+        <h1 className="text-8xl font-bold text-primary">404</h1>
 
-      {/* Mobile Image */}
-      <img
-        src={mobile404}
-        alt="404 Not Found"
-        className="block md:hidden h-full w-full object-cover"
-      />
+        <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          Page Not Found
+        </h2>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/20" />
+        <p className="mt-4 text-gray-600 leading-relaxed">
+          Sorry, the page you are looking for does not exist or has been moved.
+        </p>
 
-      {/* Home Button */}
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
-        <Link
-          to="/"
-          className="rounded-full bg-green-600 px-8 py-4 text-white font-semibold shadow-lg transition-all duration-300 hover:bg-green-700 hover:scale-105"
-        >
-          ← Return Home
-        </Link>
+        <div className="mt-8 flex justify-center gap-4">
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-emerald-600 transition"
+          >
+            <FiHome />
+            Go Home
+          </Link>
+
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition"
+          >
+            <FiArrowLeft />
+            Go Back
+          </button>
+        </div>
+
+        <div className="mt-12 text-7xl">🔍</div>
       </div>
     </div>
   );
-}
+};
+
+export default NotFound;

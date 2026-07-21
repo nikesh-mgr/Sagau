@@ -62,7 +62,11 @@ const workerSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-export default mongoose.model("Worker", workerSchema);
+const Worker = mongoose.model("Worker", workerSchema);
+
+export default Worker;

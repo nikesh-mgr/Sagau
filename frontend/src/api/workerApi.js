@@ -1,41 +1,63 @@
 import api from "./axios";
 
-// =========================
-// CREATE WORKER PROFILE
-// =========================
+/*
+|--------------------------------------------------------------------------
+| Create Worker Profile
+|--------------------------------------------------------------------------
+*/
+
 export const createWorkerProfile = async (data) => {
   const response = await api.post("/workers/create-profile", data);
+
   return response.data;
 };
 
-// =========================
-// GET LOGGED-IN PROFILE
-// =========================
-export const getProfile = async () => {
+/*
+|--------------------------------------------------------------------------
+| Get Logged In Worker Profile
+|--------------------------------------------------------------------------
+*/
+
+export const getMyWorkerProfile = async () => {
   const response = await api.get("/workers/profile");
+
   return response.data;
 };
 
-// =========================
-// UPDATE PROFILE
-// =========================
-export const updateProfile = async (data) => {
+/*
+|--------------------------------------------------------------------------
+| Update Worker Profile
+|--------------------------------------------------------------------------
+*/
+
+export const updateWorkerProfile = async (data) => {
   const response = await api.put("/workers/profile/update", data);
+
   return response.data;
 };
 
-// =========================
-// GET ALL WORKERS
-// =========================
-export const getAllWorkers = async () => {
-  const response = await api.get("/workers");
+/*
+|--------------------------------------------------------------------------
+| Get All Workers
+|--------------------------------------------------------------------------
+*/
+
+export const getAllWorkers = async (params = {}) => {
+  const response = await api.get("/workers", {
+    params,
+  });
+
   return response.data;
 };
 
-// =========================
-// GET WORKER BY ID
-// =========================
-export const getWorkerById = async (workerId) => {
-  const response = await api.get(`/workers/${workerId}`);
+/*
+|--------------------------------------------------------------------------
+| Get Worker By Id
+|--------------------------------------------------------------------------
+*/
+
+export const getWorkerById = async (id) => {
+  const response = await api.get(`/workers/${id}`);
+
   return response.data;
 };

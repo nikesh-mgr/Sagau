@@ -2,28 +2,24 @@ import mongoose from "mongoose";
 
 const applicationSchema = new mongoose.Schema(
   {
-    // JOB REFERENCE
     job: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Job",
       required: true,
     },
 
-    // WORKER REFERENCE
     worker: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // BID AMOUNT
     bidAmount: {
       type: Number,
       required: true,
       min: 1,
     },
 
-    // PROPOSAL MESSAGE
     proposalText: {
       type: String,
       required: true,
@@ -31,14 +27,12 @@ const applicationSchema = new mongoose.Schema(
       minlength: 20,
     },
 
-    // DELIVERY ESTIMATION
     estimatedDays: {
       type: Number,
       required: true,
       min: 1,
     },
 
-    // APPLICATION STATUS
     status: {
       type: String,
       enum: ["PENDING", "ACCEPTED", "REJECTED"],
@@ -50,7 +44,7 @@ const applicationSchema = new mongoose.Schema(
   },
 );
 
-// PREVENT DUPLICATE APPLICATIONS
+// Prevent a worker from applying to the same job more than once
 applicationSchema.index(
   {
     job: 1,
@@ -61,4 +55,6 @@ applicationSchema.index(
   },
 );
 
-export default mongoose.model("Application", applicationSchema);
+const Application = mongoose.model("Application", applicationSchema);
+
+export default Application;

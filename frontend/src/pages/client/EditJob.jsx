@@ -1,152 +1,116 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 
-import ClientLayout from "../../components/layouts/ClientLayout";
+import JobForm from "../../components/job/JobForm";
 
-import useJobStore from "../../store/jobStore";
+import { getSingleJob, updateJob } from "../../api/jobApi";
 
 import { successToast, errorToast } from "../../utils/toast";
 
 const EditJob = () => {
-  const { jobId } = useParams();
+  const { id } = useParams();
+
   const navigate = useNavigate();
 
-  const currentJob = useJobStore((state) => state.currentJob);
-  const fetchSingleJob = useJobStore((state) => state.fetchSingleJob);
-  const updateJob = useJobStore((state) => state.updateJob);
+  const [loading, setLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    budget: "",
-    skillsRequired: "",
-    location: "",
-    deadline: "",
-    category: "",
-  });
+  const [pageLoading, setPageLoading] = useState(true);
+
+  const [job, setJob] = useState(null);
 
   useEffect(() => {
-    const loadJob = async () => {
-      const job = await fetchSingleJob(jobId);
-
-      setFormData({
-        title: job.title || "",
-        description: job.description || "",
-        budget: job.budget || "",
-        skillsRequired: job.skillsRequired.join(", "),
-        location: job.location || "",
-        deadline: job.deadline ? job.deadline.substring(0, 10) : "",
-        category: job.category || "",
-      });
-    };
-
     loadJob();
-  }, [jobId]);
+  }, []);
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const loadJob = async () => {
     try {
-      await updateJob(jobId, {
-        ...formData,
-        budget: Number(formData.budget),
-        skillsRequired: formData.skillsRequired
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-      });
+      setPageLoading(true);
 
-      successToast("Job updated successfully");
+      const response = await getSingleJob(id);
 
-      navigate("/client/jobs");
+      setJob(response.data);
     } catch (error) {
-      console.error(error);
+      console.log(error);
 
-      errorToast(error.response?.data?.message || "Failed to update job");
+      errorToast("Unable to load job.");
+    } finally {
+      setPageLoading(false);
     }
   };
 
-  return (
-    <ClientLayout>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold mb-8">Edit Job</h1>
+  const handleUpdateJob = async (jobData) => {
+    try {
+      setLoading(true);
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="text"
-            name="title"
-            placeholder="Job Title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
+      await updateJob(id, jobData);
 
-          <textarea
-            rows="5"
-            name="description"
-            placeholder="Description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
+      successToast("Job updated successfully.");
 
-          <input
-            type="number"
-            name="budget"
-            placeholder="Budget"
-            value={formData.budget}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
+      navigate("/client/jobs");
+    } catch (error) {
+      console.log(error);
 
-          <input
-            type="text"
-            name="skillsRequired"
-            placeholder="React, Node, MongoDB"
-            value={formData.skillsRequired}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
+      errorToast(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Failed to update job.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={formData.location}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-
-          <input
-            type="date"
-            name="deadline"
-            value={formData.deadline}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-
-          <input
-            type="text"
-            name="category"
-            placeholder="Category"
-            value={formData.category}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg">
-            Update Job
-          </button>
-        </form>
+  if (pageLoading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-card p-10 text-center">
+        Loading job...
       </div>
-    </ClientLayout>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="bg-white rounded-2xl shadow-card p-10 text-center">
+        <h2 className="text-2xl font-bold">Job not found</h2>
+
+        <Link
+          to="/client/jobs"
+          className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-xl"
+        >
+          Back to My Jobs
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-6">
+        <Link
+          to="/client/jobs"
+          className="inline-flex items-center gap-2 text-primary hover:underline"
+        >
+          <FiArrowLeft />
+          Back to My Jobs
+        </Link>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-card border border-gray-200 p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Edit Job</h1>
+
+          <p className="text-gray-500 mt-2">Update your job details.</p>
+        </div>
+
+        <JobForm
+          defaultValues={job}
+          onSubmit={handleUpdateJob}
+          loading={loading}
+          buttonText="Update Job"
+        />
+      </div>
+    </div>
   );
 };
 

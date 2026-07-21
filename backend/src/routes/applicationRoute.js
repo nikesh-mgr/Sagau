@@ -5,21 +5,18 @@ import {
   getMyApplications,
   getJobApplications,
   updateApplicationStatus,
+  getClientApplications,
 } from "../controllers/applicationController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
-
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// WORKER APPLIES TO JOB
 router.post("/apply/:jobId", protect, authorizeRoles("worker"), applyToJob);
 
-// WORKER GETS OWN APPLICATIONS
 router.get("/me", protect, authorizeRoles("worker"), getMyApplications);
 
-// CLIENT GETS JOB APPLICATIONS
 router.get(
   "/job/:jobId",
   protect,
@@ -27,12 +24,11 @@ router.get(
   getJobApplications,
 );
 
-// CLIENT ACCEPTS / REJECTS APPLICATION
 router.patch(
   "/:id/status",
   protect,
   authorizeRoles("client"),
   updateApplicationStatus,
 );
-
+router.get("/client", protect, authorizeRoles("client"), getClientApplications);
 export default router;

@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+
+import Card from "../../components/common/Card";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
 
 import useAuthStore from "../../store/authStore";
-import useWorkerStore from "../../store/workerStore";
 
 import { successToast, errorToast } from "../../utils/toast";
 
@@ -11,121 +14,87 @@ const Login = () => {
 
   const login = useAuthStore((state) => state.login);
 
-  const fetchWorkerProfile = useWorkerStore((state) => state.fetchProfile);
+  const loading = useAuthStore((state) => state.loading);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setLoading(true);
-
+  const submit = async (data) => {
     try {
-      const response = await login(formData);
+      const user = await login(data);
 
-      console.log("LOGIN RESPONSE:", response);
+      console.log("LOGIN USER:", user);
 
-      const data = response?.data?.data;
-      const user = data?.user;
+      successToast("Login successful");
 
-      successToast(response?.data?.message);
-
-      if (user?.role === "client") {
-        navigate("/client");
-        return;
+      if (user.role === "client") {
+        navigate("/client/dashboard");
+      } else if (user.role === "worker") {
+        navigate("/worker/dashboard");
+      } else if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
       }
-
-      if (user?.role === "worker") {
-        try {
-          // Check whether worker profile already exists
-          await fetchWorkerProfile();
-
-          // Profile exists
-          navigate("/worker");
-        } catch (error) {
-          // Profile doesn't exist
-          if (
-            error?.response?.status === 404 ||
-            error?.response?.status === 400
-          ) {
-            navigate("/worker/profile/create");
-          } else {
-            console.error(error);
-            navigate("/worker");
-          }
-        }
-
-        return;
-      }
-
-      navigate("/");
     } catch (error) {
-      console.error("LOGIN ERROR:", error);
+      console.log("LOGIN ERROR:", error);
 
-      errorToast(
-        error?.response?.data?.message || error?.message || "Login Failed",
-      );
-    } finally {
-      setLoading(false);
+      errorToast(error.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md"
-      >
-        <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
+    <Card className="w-full max-w-md p-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
 
-        <input
+        <p className="text-gray-500 mt-2">Login to your Sagau account</p>
+      </div>
+
+      <form onSubmit={handleSubmit(submit)} className="space-y-5">
+        <Input
+          label="Email"
           type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3 mb-4"
-          required
+          placeholder="Enter your email"
+          {...register("email", {
+            required: "Email is required",
+          })}
+          error={errors.email?.message}
         />
 
-        <input
+        <Input
+          label="Password"
           type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3 mb-6"
-          required
+          placeholder="Enter your password"
+          {...register("password", {
+            required: "Password is required",
+          })}
+          error={errors.password?.message}
         />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-3 disabled:bg-gray-400"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="text-center mt-6">
-          Don't have an account?
-          <Link to="/register" className="text-blue-600 font-semibold ml-2">
-            Register
-          </Link>
-        </p>
+        <Button loading={loading} type="submit">
+          Login
+        </Button>
       </form>
-    </div>
+
+      <p className="text-center text-sm text-gray-600 mt-6">
+        Don't have an account?
+        <Link
+          to="/auth/register"
+          className="
+          text-primary
+          font-semibold
+          ml-2
+          hover:underline
+          "
+        >
+          Register
+        </Link>
+      </p>
+    </Card>
   );
 };
 

@@ -4,9 +4,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
-// CREATE CLIENT PROFILE
+// Create client profile
 export const createClientProfile = asyncHandler(async (req, res) => {
-  // CHECK EXISTING PROFILE
   const existingProfile = await Client.findOne({
     user: req.user._id,
   });
@@ -15,7 +14,6 @@ export const createClientProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Client profile already exists");
   }
 
-  // CREATE PROFILE
   const client = await Client.create({
     user: req.user._id,
     address: req.body.address,
@@ -25,7 +23,7 @@ export const createClientProfile = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, "Client profile created", client));
 });
 
-// GET MY CLIENT PROFILE
+// Get logged-in client's profile
 export const getMyClientProfile = asyncHandler(async (req, res) => {
   const client = await Client.findOne({
     user: req.user._id,
@@ -38,7 +36,7 @@ export const getMyClientProfile = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Client profile fetched", client));
 });
 
-// UPDATE CLIENT PROFILE
+// Update client profile
 export const updateClientProfile = asyncHandler(async (req, res) => {
   const updatedProfile = await Client.findOneAndUpdate(
     {
@@ -52,7 +50,7 @@ export const updateClientProfile = asyncHandler(async (req, res) => {
   );
 
   if (!updatedProfile) {
-    throw new ApiError(404, "Profile not found");
+    throw new ApiError(404, "Client profile not found");
   }
 
   res

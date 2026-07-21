@@ -8,16 +8,22 @@ const clientSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
     address: {
       type: String,
       required: true,
     },
+
     phone: {
       type: String,
       required: true,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-export default mongoose.model("Client", clientSchema);
+const Client = mongoose.model("Client", clientSchema);
+
+export default Client;

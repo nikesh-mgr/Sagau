@@ -5,13 +5,12 @@ import Worker from "../models/workerSchema.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import createNotification from "../utils/createNotification.js";
 
-/* ==========================================================
-   CREATE REVIEW
-========================================================== */
-
+// Create a review
 export const createReview = asyncHandler(async (req, res) => {
   const { agreementId } = req.params;
+
   const { rating, comment } = req.body;
 
   const agreement = await Agreement.findById(agreementId);
@@ -23,7 +22,7 @@ export const createReview = asyncHandler(async (req, res) => {
   if (agreement.status !== "COMPLETED") {
     throw new ApiError(
       400,
-      "Reviews can only be submitted after the agreement is completed",
+      "Reviews can only be submitted after agreement completion",
     );
   }
 
@@ -37,6 +36,7 @@ export const createReview = asyncHandler(async (req, res) => {
 
   const alreadyReviewed = await Review.findOne({
     agreement: agreementId,
+
     reviewer: req.user._id,
   });
 
@@ -47,52 +47,68 @@ export const createReview = asyncHandler(async (req, res) => {
   const reviewee = isClient ? agreement.worker : agreement.client;
 
   const review = await Review.create({
-    agreement: agreementId,
+    agreement: agreement._id,
+
     reviewer: req.user._id,
+
     reviewee,
+
     rating,
+
     comment,
   });
 
-  /*
-  ==========================================================
-      UPDATE WORKER REPUTATION
-  ==========================================================
-  */
+  await createNotification({
+    receiver: reviewee,
 
-  const worker = await Worker.findOne({
-    user: reviewee,
+    sender: req.user._id,
+
+    type: "NEW_REVIEW",
+
+    message: "You received a new review",
+
+    relatedId: review._id,
   });
 
-  if (worker) {
-    const reviews = await Review.find({
-      reviewee,
+  // Update worker rating only if worker received review
+
+  if (isClient) {
+    const worker = await Worker.findOne({
+      user: agreement.worker,
     });
 
-    const totalReviews = reviews.length;
+    if (worker) {
+      const reviews = await Review.find({
+        reviewee: agreement.worker,
+      });
 
-    const totalRating = reviews.reduce((sum, item) => sum + item.rating, 0);
+      const totalReviews = reviews.length;
 
-    const averageRating =
-      totalReviews === 0 ? 0 : Number((totalRating / totalReviews).toFixed(1));
+      const totalRating = reviews.reduce((sum, item) => sum + item.rating, 0);
 
-    worker.rating = averageRating;
+      const averageRating =
+        totalReviews === 0
+          ? 0
+          : Number((totalRating / totalReviews).toFixed(1));
 
-    worker.totalReviews = totalReviews;
+      worker.rating = averageRating;
 
-    worker.reputationScore = Number((averageRating * totalReviews).toFixed(1));
+      worker.totalReviews = totalReviews;
 
-    await worker.save();
+      worker.reputationScore = Number(
+        (averageRating * totalReviews).toFixed(1),
+      );
+
+      await worker.save();
+    }
   }
 
-  return res
+  res
     .status(201)
     .json(new ApiResponse(201, "Review submitted successfully", review));
 });
 
-/* ==========================================================
-   GET WORKER REVIEWS
-========================================================== */
+// Get reviews for a worker
 
 export const getWorkerReviews = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.params.workerId);
@@ -109,7 +125,7 @@ export const getWorkerReviews = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
-  return res.status(200).json(
+  res.status(200).json(
     new ApiResponse(200, "Worker reviews fetched successfully", {
       averageRating: worker.rating,
       totalReviews: worker.totalReviews,
@@ -119,9 +135,7 @@ export const getWorkerReviews = asyncHandler(async (req, res) => {
   );
 });
 
-/* ==========================================================
-   GET CLIENT REVIEWS
-========================================================== */
+// Get reviews for a client
 
 export const getClientReviews = asyncHandler(async (req, res) => {
   const reviews = await Review.find({
@@ -139,16 +153,53 @@ export const getClientReviews = asyncHandler(async (req, res) => {
       ? 0
       : Number(
           (
-            reviews.reduce((sum, review) => sum + review.rating, 0) /
-            totalReviews
+            reviews.reduce((sum, item) => sum + item.rating, 0) / totalReviews
           ).toFixed(1),
         );
 
-  return res.status(200).json(
+  res.status(200).json(
     new ApiResponse(200, "Client reviews fetched successfully", {
       averageRating,
       totalReviews,
       reviews,
     }),
   );
+});
+
+// Get reviews of agreement
+
+export const getAgreementReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({
+    agreement: req.params.agreementId,
+
+    reviewer: req.user._id,
+  }).populate("reviewee", "fullName email");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Agreement reviews fetched", reviews));
+});
+
+// FIXED: Get reviews created by logged in user
+
+export const getMyReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({
+    reviewer: req.user._id,
+  })
+    .populate("reviewee", "fullName email")
+    .populate({
+      path: "agreement",
+
+      populate: {
+        path: "job",
+        select: "title budget",
+      },
+    })
+    .sort({
+      createdAt: -1,
+    });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "My reviews fetched successfully", reviews));
 });

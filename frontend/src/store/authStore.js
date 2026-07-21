@@ -1,77 +1,116 @@
 import { create } from "zustand";
 
-import { loginUser, registerUser, getCurrentUser } from "../api/authApi";
-
-import { saveToken, getToken, removeToken } from "../utils/token";
+import { loginApi, registerApi, getMeApi } from "../api/authApi";
 
 const useAuthStore = create((set) => ({
-  user: null,
-  token: getToken(),
+  user: JSON.parse(localStorage.getItem("user")) || null,
+
+  token: localStorage.getItem("token") || null,
+
   loading: false,
 
-  // REGISTER
-  register: async (formData) => {
-    const response = await registerUser(formData);
-
-    const token = response.data.data.token;
-    const user = response.data.data.user;
-
-    saveToken(token);
-
+  login: async (data) => {
     set({
-      token,
-      user,
+      loading: true,
     });
 
-    return response;
-  },
-
-  // LOGIN
-  login: async (credentials) => {
-    const response = await loginUser(credentials);
-
-    const token = response.data.data.token;
-    const user = response.data.data.user;
-
-    saveToken(token);
-
-    set({
-      token,
-      user,
-    });
-
-    return response;
-  },
-
-  // LOAD USER
-  loadUser: async () => {
     try {
-      const token = getToken();
+      const response = await loginApi(data);
 
-      if (!token) return;
+      const token = response.data.token;
 
-      const response = await getCurrentUser();
+      const user = response.data.user;
+
+      localStorage.setItem("token", token);
+
+      localStorage.setItem("user", JSON.stringify(user));
 
       set({
-        user: response.data.data,
+        token,
+
+        user,
+      });
+
+      return user;
+    } catch (error) {
+      throw error;
+    } finally {
+      set({
+        loading: false,
+      });
+    }
+  },
+
+  register: async (data) => {
+    set({
+      loading: true,
+    });
+
+    try {
+      const response = await registerApi(data);
+
+      const token = response.data.token;
+
+      const user = response.data.user;
+
+      localStorage.setItem("token", token);
+
+      localStorage.setItem("user", JSON.stringify(user));
+
+      set({
+        token,
+
+        user,
+      });
+
+      return user;
+    } catch (error) {
+      throw error;
+    } finally {
+      set({
+        loading: false,
+      });
+    }
+  },
+
+  loadUser: async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      const response = await getMeApi();
+
+      const user = response.data;
+
+      localStorage.setItem("user", JSON.stringify(user));
+
+      set({
+        user,
+
         token,
       });
     } catch (error) {
-      removeToken();
+      localStorage.removeItem("token");
+
+      localStorage.removeItem("user");
 
       set({
         user: null,
+
         token: null,
       });
     }
   },
 
-  // LOGOUT
   logout: () => {
-    removeToken();
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user");
 
     set({
       user: null,
+
       token: null,
     });
   },

@@ -1,15 +1,15 @@
 import { useEffect } from "react";
-import AppRoutes from "./routes/AppRoutes";
+
 import useAuthStore from "./store/authStore";
 
-function App() {
+const App = () => {
   const loadUser = useAuthStore((state) => state.loadUser);
 
   useEffect(() => {
     loadUser();
-  }, []);
+  }, [loadUser]);
 
-  return <AppRoutes />;
-}
+  return null;
+};
 
 export default App;

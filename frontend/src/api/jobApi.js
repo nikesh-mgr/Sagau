@@ -1,54 +1,89 @@
 import api from "./axios";
 
-// ===========================
-// CREATE JOB
-// ===========================
-export const createJob = (data) => {
-  return api.post("/jobs", data);
+/*
+|--------------------------------------------------------------------------
+| Create Job
+|--------------------------------------------------------------------------
+*/
+
+export const createJob = async (data) => {
+  const response = await api.post("/jobs", data);
+
+  return response.data;
 };
 
-// ===========================
-// GET ALL JOBS
-// ===========================
-export const getAllJobs = (params = {}) => {
-  return api.get("/jobs", {
+/*
+|--------------------------------------------------------------------------
+| Get All Jobs
+|--------------------------------------------------------------------------
+*/
+
+export const getAllJobs = async (params = {}) => {
+  const response = await api.get("/jobs", {
     params,
   });
+
+  return response.data;
 };
 
-// ===========================
-// GET SINGLE JOB
-// ===========================
-export const getSingleJob = (jobId) => {
-  return api.get(`/jobs/${jobId}`);
+/*
+|--------------------------------------------------------------------------
+| Get Logged In Client Jobs
+|--------------------------------------------------------------------------
+*/
+
+export const getMyJobs = async () => {
+  const response = await api.get("/jobs/client/my-jobs");
+
+  return response.data;
 };
 
-// ===========================
-// GET MY JOBS
-// ===========================
-export const getMyJobs = () => {
-  return api.get("/jobs/client/my-jobs");
+/*
+|--------------------------------------------------------------------------
+| Get Single Job
+|--------------------------------------------------------------------------
+*/
+
+export const getSingleJob = async (id) => {
+  const response = await api.get(`/jobs/${id}`);
+
+  return response.data;
 };
 
-// ===========================
-// UPDATE JOB
-// ===========================
-export const updateJob = (jobId, data) => {
-  return api.put(`/jobs/${jobId}`, data);
+/*
+|--------------------------------------------------------------------------
+| Update Job
+|--------------------------------------------------------------------------
+*/
+
+export const updateJob = async (id, data) => {
+  const response = await api.put(`/jobs/${id}`, data);
+
+  return response.data;
 };
 
-// ===========================
-// DELETE JOB
-// ===========================
-export const deleteJob = (jobId) => {
-  return api.delete(`/jobs/${jobId}`);
+/*
+|--------------------------------------------------------------------------
+| Delete Job
+|--------------------------------------------------------------------------
+*/
+
+export const deleteJob = async (id) => {
+  const response = await api.delete(`/jobs/${id}`);
+
+  return response.data;
 };
 
-// ===========================
-// UPDATE JOB STATUS
-// ===========================
-export const updateJobStatus = (jobId, status) => {
-  return api.patch(`/jobs/${jobId}/status`, {
+/*
+|--------------------------------------------------------------------------
+| Update Job Status
+|--------------------------------------------------------------------------
+*/
+
+export const updateJobStatus = async (id, status) => {
+  const response = await api.patch(`/jobs/${id}/status`, {
     status,
   });
+
+  return response.data;
 };

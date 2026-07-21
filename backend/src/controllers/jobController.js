@@ -4,11 +4,10 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
-// CREATE JOB
+// Create a new job
 export const createJob = asyncHandler(async (req, res) => {
   const job = await Job.create({
     client: req.user._id,
-
     title: req.body.title,
     description: req.body.description,
     budget: req.body.budget,
@@ -21,19 +20,20 @@ export const createJob = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, "Job created successfully", job));
 });
 
-// GET ALL JOBS
+// Get all jobs with filters and pagination
 export const getAllJobs = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
-
   const skip = (page - 1) * limit;
 
   const { search, category, location, minBudget, maxBudget, status } =
     req.query;
 
-  const filter = {};
+  // Workers should only see OPEN jobs unless a status is explicitly requested
+  const filter = {
+    status: status || "OPEN",
+  };
 
-  // SEARCH
   if (search) {
     filter.$or = [
       {
@@ -51,12 +51,10 @@ export const getAllJobs = asyncHandler(async (req, res) => {
     ];
   }
 
-  // CATEGORY
   if (category) {
     filter.category = category;
   }
 
-  // LOCATION
   if (location) {
     filter.location = {
       $regex: location,
@@ -64,12 +62,6 @@ export const getAllJobs = asyncHandler(async (req, res) => {
     };
   }
 
-  // STATUS
-  if (status) {
-    filter.status = status;
-  }
-
-  // BUDGET FILTER
   if (minBudget || maxBudget) {
     filter.budget = {};
 
@@ -101,8 +93,7 @@ export const getAllJobs = asyncHandler(async (req, res) => {
     }),
   );
 });
-
-// GET SINGLE JOB
+// Get a single job
 export const getSingleJob = asyncHandler(async (req, res) => {
   const job = await Job.findById(req.params.jobId).populate(
     "client",
@@ -116,7 +107,7 @@ export const getSingleJob = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Job fetched successfully", job));
 });
 
-// UPDATE JOB
+// Update a job
 export const updateJob = asyncHandler(async (req, res) => {
   const job = await Job.findById(req.params.jobId);
 
@@ -124,7 +115,6 @@ export const updateJob = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Job not found");
   }
 
-  // OWNER CHECK
   if (job.client.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "You can update only your jobs");
   }
@@ -139,7 +129,7 @@ export const updateJob = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Job updated successfully", updatedJob));
 });
 
-// DELETE JOB
+// Delete a job
 export const deleteJob = asyncHandler(async (req, res) => {
   const job = await Job.findById(req.params.jobId);
 
@@ -147,7 +137,6 @@ export const deleteJob = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Job not found");
   }
 
-  // OWNER CHECK
   if (job.client.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "You can delete only your jobs");
   }
@@ -157,7 +146,7 @@ export const deleteJob = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Job deleted successfully"));
 });
 
-// UPDATE JOB STATUS
+// Update job status
 export const updateJobStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
@@ -173,19 +162,17 @@ export const updateJobStatus = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Job not found");
   }
 
-  // OWNER CHECK
   if (job.client.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "You can update only your jobs");
   }
 
   job.status = status;
-
   await job.save();
 
   res.status(200).json(new ApiResponse(200, "Job status updated", job));
 });
 
-// GET MY JOBS
+// Get jobs created by the logged-in client
 export const getMyJobs = asyncHandler(async (req, res) => {
   const jobs = await Job.find({
     client: req.user._id,

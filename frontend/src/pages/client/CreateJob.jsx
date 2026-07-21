@@ -1,44 +1,57 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import JobForm from "../../components/jobs/JobForm";
+import JobForm from "../../components/job/JobForm";
 
-import useJobStore from "../../store/jobStore";
-import ClientLayout from "../../components/layouts/ClientLayout";
+import { createJob } from "../../api/jobApi";
+
 import { successToast, errorToast } from "../../utils/toast";
 
 const CreateJob = () => {
   const navigate = useNavigate();
 
-  const createJob = useJobStore((state) => state.createJob);
-  const loading = useJobStore((state) => state.loading);
+  const [loading, setLoading] = useState(false);
 
-  const handleCreateJob = async (data) => {
+  const handleCreateJob = async (jobData) => {
     try {
-      await createJob(data);
+      setLoading(true);
 
-      successToast("Job created successfully");
+      await createJob(jobData);
 
-      navigate("/client/");
+      successToast("Job posted successfully.");
+
+      navigate("/client/jobs");
     } catch (error) {
-      if (error.response?.data?.errors) {
-        errorToast(error.response.data.errors[0].msg);
-        return;
-      }
+      console.error("CREATE JOB ERROR:", error.response || error);
 
-      errorToast(error.response?.data?.message || "Failed to create job");
+      errorToast(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Failed to create job.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ClientLayout>
-      <div className="max-w-4xl mx-auto py-8">
+    <div className="max-w-5xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-card border border-gray-200 p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Post a New Job</h1>
+
+          <p className="text-gray-500 mt-2">
+            Describe your project clearly so skilled workers can apply.
+          </p>
+        </div>
+
         <JobForm
           onSubmit={handleCreateJob}
           loading={loading}
-          buttonText="Create Job"
+          buttonText="Post Job"
         />
       </div>
-    </ClientLayout>
+    </div>
   );
 };
 
