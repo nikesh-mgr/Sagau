@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { FiStar, FiUser, FiBriefcase, FiMessageSquare } from "react-icons/fi";
+import {
+  FiStar,
+  FiUser,
+  FiBriefcase,
+  FiMessageSquare,
+  FiCalendar,
+} from "react-icons/fi";
 
 import { getMyReviews } from "../../api/reviewApi";
 
@@ -19,41 +25,144 @@ const MyReviews = () => {
     try {
       const response = await getMyReviews();
 
-      setReviews(response.data || []);
+      setReviews(response?.data || []);
     } catch (error) {
       console.log(error);
 
-      errorToast("Failed to load reviews");
+      errorToast(error?.response?.data?.message || "Failed to load reviews");
     } finally {
       setLoading(false);
     }
   };
 
+  const renderStars = (rating) => {
+    return Array.from({
+      length: 5,
+    }).map((_, index) => (
+      <FiStar
+        key={index}
+        className={`
+            ${
+              index < rating
+                ? "text-yellow-500 fill-yellow-500"
+                : "text-gray-300"
+            }
+          `}
+        size={18}
+      />
+    ));
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   if (loading) {
     return (
-      <div className="h-96 flex justify-center items-center">
-        Loading Reviews...
+      <div
+        className="
+          min-h-[400px]
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <div className="text-center">
+          <div
+            className="
+              h-14
+              w-14
+              mx-auto
+              rounded-full
+              border-4
+              border-emerald-600
+              border-t-transparent
+              animate-spin
+            "
+          />
+
+          <p
+            className="
+              mt-5
+              text-gray-500
+            "
+          >
+            Loading Reviews...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">My Reviews</h1>
+      {/* Header */}
 
-        <p className="text-gray-500 mt-2">
+      <div>
+        <h1
+          className="
+            text-3xl
+            font-bold
+            text-gray-900
+          "
+        >
+          My Reviews
+        </h1>
+
+        <p
+          className="
+            text-gray-500
+            mt-2
+          "
+        >
           Reviews you have given to workers after completed jobs.
         </p>
       </div>
 
+      {/* Empty State */}
+
       {reviews.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow p-12 text-center">
-          <FiMessageSquare size={60} className="mx-auto text-gray-300 mb-5" />
+        <div
+          className="
+              bg-white
+              rounded-3xl
+              shadow
+              border
+              border-gray-200
+              p-12
+              text-center
+            "
+        >
+          <FiMessageSquare
+            size={60}
+            className="
+                mx-auto
+                text-gray-300
+                mb-5
+              "
+          />
 
-          <h2 className="text-2xl font-bold">No Reviews Yet</h2>
+          <h2
+            className="
+                text-2xl
+                font-bold
+              "
+          >
+            No Reviews Yet
+          </h2>
 
-          <p className="text-gray-500 mt-3">
+          <p
+            className="
+                text-gray-500
+                mt-3
+              "
+          >
             Reviews will appear after you complete jobs and review workers.
           </p>
         </div>
@@ -63,81 +172,195 @@ const MyReviews = () => {
             <div
               key={review._id}
               className="
-                bg-white
-                rounded-2xl
-                shadow
-                border
-                border-gray-200
-                p-8
-                "
+                      bg-white
+                      rounded-3xl
+                      shadow-sm
+                      border
+                      border-gray-200
+                      p-6
+                      md:p-8
+                      hover:shadow-lg
+                      transition
+                    "
             >
-              <div className="flex justify-between items-start flex-wrap gap-5">
-                <div className="flex gap-4 items-center">
+              {/* User Header */}
+
+              <div
+                className="
+                        flex
+                        justify-between
+                        items-start
+                        flex-wrap
+                        gap-5
+                      "
+              >
+                <div
+                  className="
+                          flex
+                          items-center
+                          gap-4
+                        "
+                >
                   <div
                     className="
-                      w-14
-                      h-14
-                      rounded-full
-                      bg-primary/10
-                      flex
-                      items-center
-                      justify-center
-                      "
+                            w-16
+                            h-16
+                            rounded-full
+                            bg-emerald-100
+                            flex
+                            items-center
+                            justify-center
+                          "
                   >
-                    <FiUser size={28} className="text-primary" />
+                    <FiUser
+                      size={30}
+                      className="
+                              text-emerald-600
+                            "
+                    />
                   </div>
 
                   <div>
-                    <h2 className="text-xl font-bold">
-                      {review.reviewee?.fullName}
+                    <h2
+                      className="
+                              text-xl
+                              font-bold
+                            "
+                    >
+                      {review.reviewee?.fullName || "Worker"}
                     </h2>
 
-                    <p className="text-gray-500">{review.reviewee?.email}</p>
+                    <p
+                      className="
+                              text-gray-500
+                            "
+                    >
+                      {review.reviewee?.email || "Email unavailable"}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <FiStar className="text-yellow-500" />
+                {/* Rating */}
 
-                  <span className="font-bold text-lg">{review.rating}/5</span>
+                <div
+                  className="
+                          flex
+                          items-center
+                          gap-3
+                        "
+                >
+                  <div className="flex">{renderStars(review.rating || 0)}</div>
+
+                  <span
+                    className="
+                            font-bold
+                            text-lg
+                          "
+                  >
+                    {review.rating}/5
+                  </span>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6 mt-8">
-                <div className="flex gap-3">
-                  <FiBriefcase className="text-primary mt-1" />
+              {/* Job Information */}
+
+              <div
+                className="
+                        grid
+                        md:grid-cols-2
+                        gap-6
+                        mt-8
+                      "
+              >
+                <div
+                  className="
+                          flex
+                          gap-3
+                        "
+                >
+                  <FiBriefcase
+                    className="
+                            text-emerald-600
+                            mt-1
+                          "
+                  />
 
                   <div>
-                    <p className="text-gray-500 text-sm">Job</p>
+                    <p
+                      className="
+                              text-sm
+                              text-gray-500
+                            "
+                    >
+                      Job
+                    </p>
 
-                    <p className="font-semibold">
+                    <p
+                      className="
+                              font-semibold
+                            "
+                    >
                       {review.agreement?.job?.title || "Completed Job"}
                     </p>
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-gray-500 text-sm">Reviewed Date</p>
+                <div
+                  className="
+                          flex
+                          gap-3
+                        "
+                >
+                  <FiCalendar
+                    className="
+                            text-emerald-600
+                            mt-1
+                          "
+                  />
 
-                  <p className="font-semibold">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </p>
+                  <div>
+                    <p
+                      className="
+                              text-sm
+                              text-gray-500
+                            "
+                    >
+                      Reviewed Date
+                    </p>
+
+                    <p
+                      className="
+                              font-semibold
+                            "
+                    >
+                      {formatDate(review.createdAt)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              {/* Feedback */}
+
               <div className="mt-8">
-                <h3 className="font-bold mb-3">Your Feedback</h3>
+                <h3
+                  className="
+                          font-bold
+                          mb-3
+                        "
+                >
+                  Your Feedback
+                </h3>
 
                 <div
                   className="
-                    bg-gray-50
-                    rounded-xl
-                    p-5
-                    text-gray-700
-                    leading-7
-                    "
+                          bg-gray-50
+                          rounded-2xl
+                          p-5
+                          text-gray-700
+                          leading-7
+                        "
                 >
-                  {review.comment}
+                  {review.comment || "No comment provided"}
                 </div>
               </div>
             </div>

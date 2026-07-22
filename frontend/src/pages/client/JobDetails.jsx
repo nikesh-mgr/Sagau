@@ -10,6 +10,7 @@ import {
   FiArrowLeft,
   FiTrash2,
   FiUsers,
+  FiBriefcase,
 } from "react-icons/fi";
 
 import { getSingleJob, deleteJob } from "../../api/jobApi";
@@ -69,38 +70,176 @@ const JobDetails = () => {
     }
   };
 
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "OPEN":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+
+      case "IN_PROGRESS":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+
+      case "COMPLETED":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+
+      default:
+        return "bg-red-100 text-red-700 border-red-200";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl p-8 shadow-card">Loading...</div>
+      <div
+        className="
+          min-h-[400px]
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          border-slate-200
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <div className="text-center">
+          <div
+            className="
+              w-12
+              h-12
+              rounded-full
+              border-4
+              border-emerald-600
+              border-t-transparent
+              animate-spin
+              mx-auto
+            "
+          />
+
+          <p
+            className="
+              mt-4
+              text-slate-500
+            "
+          >
+            Loading job details...
+          </p>
+        </div>
+      </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="bg-white rounded-2xl p-8 shadow-card">Job not found</div>
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          border-slate-200
+          p-8
+          text-center
+        "
+      >
+        <FiBriefcase
+          className="
+            text-5xl
+            text-slate-300
+            mx-auto
+          "
+        />
+
+        <h2
+          className="
+            mt-4
+            text-2xl
+            font-bold
+            text-slate-800
+          "
+        >
+          Job not found
+        </h2>
+
+        <Link
+          to="/client/jobs"
+          className="
+            inline-flex
+            mt-5
+            bg-emerald-600
+            text-white
+            px-6
+            py-3
+            rounded-xl
+            font-semibold
+          "
+        >
+          Back To Jobs
+        </Link>
+      </div>
     );
   }
 
   const isOpen = job.status === "OPEN";
 
   return (
-    <div className="space-y-8">
-      {/* Header Actions */}
+    <div
+      className="
+        space-y-8
+        pb-10
+      "
+    >
+      {/* TOP ACTION BAR */}
 
-      <div className="flex items-center justify-between">
+      <div
+        className="
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          gap-4
+        "
+      >
         <Link
           to="/client/jobs"
-          className="flex items-center gap-2 text-primary"
+          className="
+            inline-flex
+            items-center
+            gap-2
+            text-emerald-600
+            font-semibold
+            hover:text-emerald-700
+          "
         >
           <FiArrowLeft />
-          Back
+          Back To Jobs
         </Link>
 
-        <div className="flex gap-3">
+        <div
+          className="
+            flex
+            flex-col
+            sm:flex-row
+            gap-3
+          "
+        >
           {isOpen && (
             <Link
               to={`/client/jobs/edit/${job._id}`}
-              className="bg-blue-600 text-white px-5 py-3 rounded-xl flex items-center gap-2 hover:bg-blue-700"
+              className="
+                inline-flex
+                justify-center
+                items-center
+                gap-2
+                bg-blue-600
+                text-white
+                px-5
+                py-3
+                rounded-xl
+                font-semibold
+                hover:bg-blue-700
+                transition
+              "
             >
               <FiEdit />
               Edit Job
@@ -110,7 +249,20 @@ const JobDetails = () => {
           {isOpen && (
             <button
               onClick={handleDelete}
-              className="bg-red-600 text-white px-5 py-3 rounded-xl flex items-center gap-2 hover:bg-red-700"
+              className="
+                inline-flex
+                justify-center
+                items-center
+                gap-2
+                bg-red-600
+                text-white
+                px-5
+                py-3
+                rounded-xl
+                font-semibold
+                hover:bg-red-700
+                transition
+              "
             >
               <FiTrash2 />
               Delete
@@ -119,83 +271,200 @@ const JobDetails = () => {
         </div>
       </div>
 
-      {/* Main Details */}
+      {/* MAIN JOB CARD */}
 
-      <div className="bg-white rounded-2xl shadow-card p-8">
-        <div className="flex justify-between items-start">
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          border
+          border-slate-200
+          shadow-sm
+          p-6
+          sm:p-8
+        "
+      >
+        <div
+          className="
+            flex
+            flex-col
+            md:flex-row
+            md:justify-between
+            gap-5
+          "
+        >
           <div>
-            <h1 className="text-3xl font-bold">{job.title}</h1>
+            <h1
+              className="
+                text-3xl
+                sm:text-4xl
+                font-bold
+                text-slate-900
+              "
+            >
+              {job.title}
+            </h1>
 
-            <p className="text-gray-500 mt-2">{job.category}</p>
+            <p
+              className="
+                mt-2
+                text-slate-500
+              "
+            >
+              {job.category}
+            </p>
           </div>
 
           <span
-            className={`px-4 py-2 rounded-full font-semibold
-            ${
-              job.status === "OPEN"
-                ? "bg-green-100 text-green-700"
-                : job.status === "IN_PROGRESS"
-                  ? "bg-blue-100 text-blue-700"
-                  : job.status === "COMPLETED"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-red-100 text-red-700"
-            }`}
+            className={`
+              h-fit
+              px-4
+              py-2
+              rounded-full
+              border
+              font-semibold
+              text-sm
+              ${getStatusStyle(job.status)}
+            `}
           >
-            {job.status}
+            {job.status.replace("_", " ")}
           </span>
         </div>
 
-        <p className="mt-8 text-gray-700 leading-8">{job.description}</p>
+        <p
+          className="
+            mt-8
+            text-slate-700
+            leading-8
+          "
+        >
+          {job.description}
+        </p>
       </div>
 
-      {/* Job Information Cards */}
+      {/* INFORMATION GRID */}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-card p-6">
-          <FiDollarSign className="text-primary text-3xl mb-3" />
+      <div
+        className="
+          grid
+          grid-cols-1
+          sm:grid-cols-2
+          xl:grid-cols-4
+          gap-5
+        "
+      >
+        {[
+          {
+            title: "Budget",
+            value: `NPR ${job.budget}`,
+            icon: <FiDollarSign />,
+          },
 
-          <p className="text-gray-500">Budget</p>
+          {
+            title: "Location",
+            value: job.location,
+            icon: <FiMapPin />,
+          },
 
-          <h3 className="text-2xl font-bold">NPR {job.budget}</h3>
-        </div>
+          {
+            title: "Deadline",
+            value: new Date(job.deadline).toLocaleDateString(),
+            icon: <FiCalendar />,
+          },
 
-        <div className="bg-white rounded-2xl shadow-card p-6">
-          <FiMapPin className="text-primary text-3xl mb-3" />
+          {
+            title: "Category",
+            value: job.category,
+            icon: <FiTag />,
+          },
+        ].map((item, index) => (
+          <div
+            key={index}
+            className="
+              bg-white
+              rounded-2xl
+              border
+              border-slate-200
+              p-6
+            "
+          >
+            <div
+              className="
+                text-emerald-600
+                text-3xl
+                mb-4
+              "
+            >
+              {item.icon}
+            </div>
 
-          <p className="text-gray-500">Location</p>
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
+              {item.title}
+            </p>
 
-          <h3 className="text-xl font-semibold">{job.location}</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-card p-6">
-          <FiCalendar className="text-primary text-3xl mb-3" />
-
-          <p className="text-gray-500">Deadline</p>
-
-          <h3 className="text-lg font-semibold">
-            {new Date(job.deadline).toLocaleDateString()}
-          </h3>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-card p-6">
-          <FiTag className="text-primary text-3xl mb-3" />
-
-          <p className="text-gray-500">Category</p>
-
-          <h3 className="text-lg font-semibold">{job.category}</h3>
-        </div>
+            <h3
+              className="
+                mt-1
+                font-bold
+                text-lg
+                text-slate-900
+                break-words
+              "
+            >
+              {item.value}
+            </h3>
+          </div>
+        ))}
       </div>
 
-      {/* Skills */}
+      {/* SKILLS */}
 
-      <div className="bg-white rounded-2xl shadow-card p-8">
-        <h2 className="text-2xl font-bold mb-6">Required Skills</h2>
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          border
+          border-slate-200
+          p-6
+          sm:p-8
+        "
+      >
+        <h2
+          className="
+            text-2xl
+            font-bold
+            text-slate-900
+            mb-5
+          "
+        >
+          Required Skills
+        </h2>
 
-        <div className="flex flex-wrap gap-3">
+        <div
+          className="
+            flex
+            flex-wrap
+            gap-3
+          "
+        >
           {job.skillsRequired?.map((skill) => (
             <span
               key={skill}
-              className="bg-primary/10 text-primary px-4 py-2 rounded-full"
+              className="
+                px-4
+                py-2
+                rounded-full
+                bg-emerald-50
+                text-emerald-700
+                border
+                border-emerald-100
+                font-medium
+              "
             >
               {skill}
             </span>
@@ -203,13 +472,33 @@ const JobDetails = () => {
         </div>
       </div>
 
-      {/* Applicants */}
+      {/* APPLICANTS CTA */}
 
       {isOpen && (
-        <div className="bg-white rounded-2xl shadow-card p-8">
+        <div
+          className="
+            bg-white
+            rounded-3xl
+            border
+            border-slate-200
+            p-6
+          "
+        >
           <Link
             to={`/client/jobs/${job._id}/applicants`}
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700"
+            className="
+              inline-flex
+              items-center
+              gap-2
+              bg-indigo-600
+              text-white
+              px-6
+              py-3
+              rounded-xl
+              font-semibold
+              hover:bg-indigo-700
+              transition
+            "
           >
             <FiUsers />
             View Applicants
@@ -218,9 +507,19 @@ const JobDetails = () => {
       )}
 
       {!isOpen && (
-        <div className="bg-gray-50 rounded-xl p-5 text-center text-gray-600">
+        <div
+          className="
+            bg-slate-50
+            border
+            border-slate-200
+            rounded-2xl
+            p-5
+            text-center
+            text-slate-600
+          "
+        >
           This job is currently {job.status.toLowerCase().replace("_", " ")}.
-          Editing and deleting are disabled.
+          Editing and deletion are disabled.
         </div>
       )}
     </div>

@@ -4,59 +4,60 @@ const notificationSchema = new mongoose.Schema(
   {
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
-
       ref: "User",
-
       required: true,
     },
 
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-
       ref: "User",
-
       default: null,
     },
 
     type: {
       type: String,
-
       enum: [
+        // Applications
         "APPLICATION_RECEIVED",
-
         "APPLICATION_ACCEPTED",
-
         "APPLICATION_REJECTED",
 
+        // Agreements
         "AGREEMENT_CREATED",
-
+        "WORK_SUBMITTED",
+        "WORK_APPROVED",
         "AGREEMENT_COMPLETED",
+        "AGREEMENT_CANCELLED",
 
+        // Reviews
         "NEW_REVIEW",
-      ],
 
+        // Jobs
+        "JOB_CREATED",
+        "JOB_UPDATED",
+        "JOB_CLOSED",
+
+        // Generic
+        "GENERAL",
+      ],
       required: true,
     },
 
     message: {
       type: String,
-
       required: true,
     },
 
     relatedId: {
       type: mongoose.Schema.Types.ObjectId,
-
       default: null,
     },
 
     isRead: {
       type: Boolean,
-
       default: false,
     },
   },
-
   {
     timestamps: true,
   },

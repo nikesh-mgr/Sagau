@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const agreementSchema = new mongoose.Schema(
   {
+    // =====================================================
     // References
+    // =====================================================
+
     job: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Job",
@@ -66,7 +69,7 @@ const agreementSchema = new mongoose.Schema(
     },
 
     // =====================================================
-    // Completion Flow
+    // Agreement Status
     // =====================================================
 
     status: {
@@ -75,14 +78,28 @@ const agreementSchema = new mongoose.Schema(
       default: "ACTIVE",
     },
 
+    // =====================================================
+    // Completion Workflow
+    // =====================================================
+
     workerCompleted: {
       type: Boolean,
       default: false,
     },
 
+    workerCompletedAt: {
+      type: Date,
+      default: null,
+    },
+
     clientCompleted: {
       type: Boolean,
       default: false,
+    },
+
+    clientCompletedAt: {
+      type: Date,
+      default: null,
     },
 
     startedAt: {

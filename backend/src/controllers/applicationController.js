@@ -134,37 +134,54 @@ export const getJobApplications = asyncHandler(async (req, res) => {
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
+  if (!status) {
+    throw new ApiError(400, "Status is required");
+  }
+
   const normalizedStatus = status.toUpperCase();
 
   if (!["ACCEPTED", "REJECTED"].includes(normalizedStatus)) {
     throw new ApiError(400, "Invalid application status");
   }
 
+  // Find application
   const application = await Application.findById(req.params.id);
 
   if (!application) {
     throw new ApiError(404, "Application not found");
   }
 
+  // Find related job
   const job = await Job.findById(application.job);
 
   if (!job) {
     throw new ApiError(404, "Job not found");
   }
 
+  // Check ownership
   if (job.client.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "Not authorized");
+    throw new ApiError(
+      403,
+      "You are not authorized to update this application",
+    );
   }
 
-  // Don't update twice
+  // Prevent duplicate action
   if (application.status !== "PENDING") {
-    throw new ApiError(400, "Application has already been processed");
+    throw new ApiError(400, "Application already processed");
   }
 
-  application.status = normalizedStatus;
-  await application.save();
+  /*
+  ==========================================
+  REJECT APPLICATION
+  ==========================================
+  */
 
   if (normalizedStatus === "REJECTED") {
+    application.status = "REJECTED";
+
+    await application.save();
+
     return res
       .status(200)
       .json(
@@ -172,15 +189,24 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
       );
   }
 
-  // ===========================
-  // ACCEPT APPLICATION
-  // ===========================
+  /*
+  ==========================================
+  ACCEPT APPLICATION
+  ==========================================
+  */
 
-  // Reject all remaining applications
+  application.status = "ACCEPTED";
+
+  await application.save();
+
+  // Reject other applicants
+
   await Application.updateMany(
     {
       job: job._id,
-      _id: { $ne: application._id },
+      _id: {
+        $ne: application._id,
+      },
       status: "PENDING",
     },
     {
@@ -190,24 +216,19 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     },
   );
 
-  // Update Job
+  // Update job
+
   job.status = "IN_PROGRESS";
+
   job.selectedWorker = application.worker;
 
   await job.save();
 
-  // Notify Worker
-  await createNotification({
-    receiver: application.worker,
-    sender: req.user._id,
-    type: "APPLICATION_ACCEPTED",
-    message: `Your proposal for "${job.title}" has been accepted.`,
-    relatedId: job._id,
-  });
-
-  // ===========================
-  // Create Agreement
-  // ===========================
+  /*
+  ==========================================
+  CREATE AGREEMENT
+  ==========================================
+  */
 
   let agreement = await Agreement.findOne({
     job: job._id,
@@ -216,13 +237,31 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
 
   if (!agreement) {
     agreement = await Agreement.create({
+      /*
+      REFERENCES
+      */
+
       job: job._id,
 
       client: job.client,
 
       worker: application.worker,
 
-      // Accepted Offer
+      /*
+      JOB SNAPSHOT
+      REQUIRED BY AGREEMENT SCHEMA
+      */
+
+      jobTitle: job.title,
+
+      jobDescription: job.description,
+
+      jobCategory: job.category,
+
+      /*
+      AGREEMENT DETAILS
+      */
+
       agreedBudget: application.bidAmount,
 
       proposalText: application.proposalText,
@@ -235,38 +274,62 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
 
       clientCompleted: false,
     });
-
-    // Notify Client
-    await createNotification({
-      receiver: job.client,
-      sender: application.worker,
-      type: "AGREEMENT_CREATED",
-      message: `Agreement created for "${job.title}".`,
-      relatedId: agreement._id,
-    });
-
-    // Notify Worker
-    await createNotification({
-      receiver: application.worker,
-      sender: job.client,
-      type: "AGREEMENT_CREATED",
-      message: `Your agreement for "${job.title}" is ready.`,
-      relatedId: agreement._id,
-    });
   }
+
+  /*
+  ==========================================
+  NOTIFICATIONS
+  ==========================================
+  */
+
+  await createNotification({
+    receiver: application.worker,
+
+    sender: req.user._id,
+
+    type: "APPLICATION_ACCEPTED",
+
+    message: `Your proposal for "${job.title}" has been accepted.`,
+
+    relatedId: job._id,
+  });
+
+  await createNotification({
+    receiver: job.client,
+
+    sender: application.worker,
+
+    type: "AGREEMENT_CREATED",
+
+    message: `Agreement created for "${job.title}".`,
+
+    relatedId: agreement._id,
+  });
+
+  await createNotification({
+    receiver: application.worker,
+
+    sender: job.client,
+
+    type: "AGREEMENT_CREATED",
+
+    message: `Your agreement for "${job.title}" is ready.`,
+
+    relatedId: agreement._id,
+  });
 
   const updatedApplication = await Application.findById(application._id)
     .populate("worker", "fullName email")
     .populate("job", "title budget status");
 
-  res.status(200).json(
+  return res.status(200).json(
     new ApiResponse(200, "Application accepted successfully", {
       application: updatedApplication,
+
       agreement,
     }),
   );
 });
-// Get all applications for client's jobs
 // Get all applications for client's jobs
 export const getClientApplications = asyncHandler(async (req, res) => {
   const clientJobs = await Job.find({

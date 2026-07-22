@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
-
+import About from "../pages/public/About";
 import ClientLayout from "../layouts/ClientLayout";
 import WorkerLayout from "../layouts/WorkerLayout";
 import AdminLayout from "../layouts/AdminLayout";
@@ -10,10 +10,14 @@ import ClientDashboard from "../pages/client/ClientDashboard";
 import WorkerDashboard from "../pages/worker/WorkerDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AuthLayout from "../layouts/AuthLayout";
+import Contact from "../pages/public/Contact";
+import CreateWorkerProfile from "../pages/worker/CreateWorkerProfile";
 import PublicLayout from "../layouts/PublicLayout";
 import CreateJob from "../pages/client/CreateJob";
+import HowItWorks from "../pages/public/Howitworks";
 import MyJobs from "../pages/client/MyJobs";
 import EditJob from "../pages/client/EditJob";
+import Services from "../pages/public/Services";
 import Home from "../pages/public/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -29,6 +33,7 @@ import WorkerAgreements from "../pages/worker/Agreements";
 import AgreementDetails from "../pages/client/AgreementDetails";
 import WorkerAgreementDetails from "../pages/worker/AgreementDetails";
 import WorkerReviews from "../pages/worker/Reviews";
+import ProfileCompleteRoute from "./ProfileCompleteRoute";
 import WorkerProfile from "../pages/worker/Profile";
 import ClientReviews from "../pages/client/MyReviews";
 const router = createBrowserRouter([
@@ -41,6 +46,22 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "services",
+        element: <Services />,
+      },
+      {
+        path: "how-it-works",
+        element: <HowItWorks />,
+      },
+      {
+        path: "contact",
+        element: <Contact />,
       },
     ],
   },
@@ -80,7 +101,11 @@ const router = createBrowserRouter([
               {
                 path: "dashboard",
 
-                element: <ClientDashboard />,
+                element: (
+                  <ProfileCompleteRoute role="client">
+                    <ClientDashboard />
+                  </ProfileCompleteRoute>
+                ),
               },
               {
                 path: "profile",
@@ -141,7 +166,11 @@ const router = createBrowserRouter([
               {
                 path: "dashboard",
 
-                element: <WorkerDashboard />,
+                element: (
+                  <ProfileCompleteRoute role="worker">
+                    <WorkerDashboard />
+                  </ProfileCompleteRoute>
+                ),
               },
               {
                 path: "jobs",
@@ -174,6 +203,10 @@ const router = createBrowserRouter([
               {
                 path: "profile",
                 element: <WorkerProfile />,
+              },
+              {
+                path: "create-profile",
+                element: <CreateWorkerProfile />,
               },
             ],
           },

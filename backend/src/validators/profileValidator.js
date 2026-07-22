@@ -13,7 +13,9 @@ export const workerProfileValidator = [
 
   body("hourlyRate").isNumeric().withMessage("Hourly rate must be a number"),
 
-  body("location").notEmpty().withMessage("Location required"),
+  body("location").trim().notEmpty().withMessage("Location required"),
+
+  body("phone").trim().notEmpty().withMessage("Phone number required"),
 ];
 
 // CLIENT PROFILE VALIDATION

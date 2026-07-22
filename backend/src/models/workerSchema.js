@@ -35,7 +35,11 @@ const workerSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     availability: {
       type: String,
       enum: ["Available", "Busy", "Not Available"],

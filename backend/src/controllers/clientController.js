@@ -30,7 +30,9 @@ export const getMyClientProfile = asyncHandler(async (req, res) => {
   }).populate("user", "fullName email role");
 
   if (!client) {
-    throw new ApiError(404, "Client profile not found");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Client profile not created yet", null));
   }
 
   res.status(200).json(new ApiResponse(200, "Client profile fetched", client));

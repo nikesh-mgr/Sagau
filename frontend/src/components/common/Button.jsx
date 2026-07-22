@@ -15,16 +15,43 @@ const Button = ({
       "border border-primary text-primary hover:bg-primary hover:text-white",
 
     danger: "bg-red-500 text-white hover:bg-red-600",
+
+    success: "bg-green-600 text-white hover:bg-green-700",
+
+    ghost: "bg-gray-100 text-gray-700 hover:bg-gray-200",
   };
 
   return (
     <button
       type={type}
       disabled={loading}
-      className={`px-6 py-3 rounded-xl font-semibold transition duration-300 disabled:opacity-50 ${styles[variant]} ${className}`}
+      aria-busy={loading}
+      className={`
+        px-6
+        py-3
+        rounded-xl
+        font-semibold
+        transition
+        duration-300
+        flex
+        items-center
+        justify-center
+        gap-2
+        disabled:opacity-50
+        disabled:cursor-not-allowed
+        ${styles[variant] || styles.primary}
+        ${className}
+      `}
       {...props}
     >
-      {loading ? "Loading..." : children}
+      {loading ? (
+        <>
+          <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Processing...
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 };

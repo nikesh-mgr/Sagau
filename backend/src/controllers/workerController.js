@@ -21,6 +21,7 @@ export const createWorkerProfile = asyncHandler(async (req, res) => {
     experience: req.body.experience,
     hourlyRate: req.body.hourlyRate,
     location: req.body.location,
+    phone: req.body.phone,
     availability: req.body.availability,
     portfolio: req.body.portfolio,
   });
@@ -29,18 +30,21 @@ export const createWorkerProfile = asyncHandler(async (req, res) => {
 });
 
 // Get logged-in worker profile
+
 export const getMyWorkerProfile = asyncHandler(async (req, res) => {
   const worker = await Worker.findOne({
     user: req.user._id,
   }).populate("user", "fullName email role");
 
+  // Profile has not been created yet
   if (!worker) {
-    throw new ApiError(404, "Worker profile not found");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Worker profile not created yet", null));
   }
 
   res.status(200).json(new ApiResponse(200, "Worker profile fetched", worker));
 });
-
 // Update worker profile
 export const updateWorkerProfile = asyncHandler(async (req, res) => {
   const updatedProfile = await Worker.findOneAndUpdate(

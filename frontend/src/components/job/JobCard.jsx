@@ -8,25 +8,28 @@ import {
   FiEdit,
   FiTrash2,
   FiUsers,
+  FiBriefcase,
 } from "react-icons/fi";
+
+import { motion } from "framer-motion";
 
 const JobCard = ({ job, onDelete }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case "OPEN":
-        return "bg-green-100 text-green-700";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
 
       case "IN_PROGRESS":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-50 text-blue-700 border-blue-200";
 
       case "COMPLETED":
-        return "bg-purple-100 text-purple-700";
+        return "bg-purple-50 text-purple-700 border-purple-200";
 
       case "CLOSED":
-        return "bg-red-100 text-red-700";
+        return "bg-red-50 text-red-700 border-red-200";
 
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
@@ -43,132 +46,286 @@ const JobCard = ({ job, onDelete }) => {
   const isOpen = job.status === "OPEN";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition duration-300">
-      {/* Job Information */}
+    <motion.article
+      whileHover={{
+        y: -6,
+      }}
+      transition={{
+        duration: 0.2,
+      }}
+      className="
+      group
+      overflow-hidden
+      rounded-3xl
+      border
+      border-gray-100
+      bg-white
+      shadow-sm
+      transition
+      hover:shadow-xl
+      "
+    >
+      {/* HEADER */}
 
       <div className="p-6">
-        <div className="flex justify-between items-start gap-5">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">{job.title}</h2>
-
-            <p className="text-gray-500 mt-1">{job.category}</p>
-          </div>
-
-          <span
-            className={`px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-              job.status,
-            )}`}
-          >
-            {job.status}
-          </span>
-        </div>
-
-        <p className="text-gray-600 mt-5 line-clamp-3">{job.description}</p>
-
-        <div className="grid md:grid-cols-2 gap-5 mt-6">
-          <div className="flex items-center gap-3">
-            <FiDollarSign className="text-primary" />
-
-            <div>
-              <p className="text-gray-500 text-sm">Budget</p>
-
-              <p className="font-semibold">NPR {job.budget}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex gap-4">
+            <div
+              className="
+            flex
+            h-14
+            w-14
+            shrink-0
+            items-center
+            justify-center
+            rounded-2xl
+            bg-gradient-to-br
+            from-emerald-500
+            to-teal-600
+            text-white
+            shadow-lg
+            "
+            >
+              <FiBriefcase size={24} />
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <FiMapPin className="text-primary" />
 
             <div>
-              <p className="text-gray-500 text-sm">Location</p>
+              <h2
+                className="
+              line-clamp-2
+              text-xl
+              font-bold
+              text-gray-900
+              "
+              >
+                {job.title}
+              </h2>
 
-              <p className="font-semibold">{job.location}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <FiCalendar className="text-primary" />
-
-            <div>
-              <p className="text-gray-500 text-sm">Deadline</p>
-
-              <p className="font-semibold">
-                {new Date(job.deadline).toLocaleDateString()}
+              <p
+                className="
+              mt-1
+              text-sm
+              text-gray-500
+              "
+              >
+                {job.category}
               </p>
             </div>
           </div>
 
-          <div>
-            <p className="text-gray-500 text-sm">Required Skills</p>
-
-            <p className="font-semibold">
-              {job.skillsRequired?.length || 0} Skills
-            </p>
-          </div>
+          <span
+            className={`
+          shrink-0
+          rounded-full
+          border
+          px-3
+          py-1
+          text-xs
+          font-semibold
+          ${getStatusColor(job.status)}
+          `}
+          >
+            {job.status.replace("_", " ")}
+          </span>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-6">
-          {job.skillsRequired?.slice(0, 4).map((skill) => (
+        {/* DESCRIPTION */}
+
+        <p
+          className="
+        mt-5
+        line-clamp-3
+        text-sm
+        leading-relaxed
+        text-gray-600
+        "
+        >
+          {job.description}
+        </p>
+
+        {/* JOB INFORMATION */}
+
+        <div
+          className="
+        mt-6
+        grid
+        grid-cols-2
+        gap-4
+        "
+        >
+          <InfoItem
+            icon={<FiDollarSign />}
+            title="Budget"
+            value={`NPR ${job.budget}`}
+            color="green"
+          />
+
+          <InfoItem
+            icon={<FiMapPin />}
+            title="Location"
+            value={job.location}
+            color="blue"
+          />
+
+          <InfoItem
+            icon={<FiCalendar />}
+            title="Deadline"
+            value={new Date(job.deadline).toLocaleDateString()}
+            color="purple"
+          />
+
+          <InfoItem
+            icon={<FiBriefcase />}
+            title="Skills"
+            value={`${job.skillsRequired?.length || 0} skills`}
+            color="orange"
+          />
+        </div>
+
+        {/* SKILLS */}
+
+        <div
+          className="
+        mt-6
+        flex
+        flex-wrap
+        gap-2
+        "
+        >
+          {job.skillsRequired?.slice(0, 5).map((skill) => (
             <span
               key={skill}
-              className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm"
+              className="
+              rounded-full
+              bg-emerald-50
+              px-3
+              py-1
+              text-xs
+              font-medium
+              text-emerald-700
+              "
             >
               {skill}
             </span>
           ))}
 
-          {job.skillsRequired?.length > 4 && (
-            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm">
-              +{job.skillsRequired.length - 4}
+          {job.skillsRequired?.length > 5 && (
+            <span
+              className="
+            rounded-full
+            bg-gray-100
+            px-3
+            py-1
+            text-xs
+            text-gray-600
+            "
+            >
+              +{job.skillsRequired.length - 5}
             </span>
           )}
         </div>
       </div>
 
-      {/* Actions */}
+      {/* ACTIONS */}
 
-      <div className="border-t p-5">
-        <div className="grid md:grid-cols-2 gap-3">
-          {/* View Always Available */}
-
+      <div
+        className="
+      border-t
+      border-gray-100
+      bg-gray-50/50
+      p-5
+      "
+      >
+        <div
+          className="
+        grid
+        grid-cols-2
+        gap-3
+        "
+        >
           <Link
             to={`/client/jobs/${job._id}`}
-            className="flex items-center justify-center gap-2 border border-primary text-primary rounded-xl py-3 hover:bg-primary hover:text-white transition"
+            className="
+            flex
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            border
+            border-gray-200
+            bg-white
+            py-3
+            font-semibold
+            text-gray-700
+            transition
+            hover:border-emerald-600
+            hover:text-emerald-600
+            "
           >
             <FiEye />
             View
           </Link>
 
-          {/* Applicants Only For Open Jobs */}
-
           {isOpen && (
             <Link
               to={`/client/jobs/${job._id}/applicants`}
-              className="flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-xl py-3 hover:bg-indigo-700 transition"
+              className="
+              flex
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-emerald-600
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-emerald-700
+              "
             >
               <FiUsers />
               Applicants
             </Link>
           )}
 
-          {/* Edit Only Open Jobs */}
-
           {isOpen && (
             <Link
               to={`/client/jobs/edit/${job._id}`}
-              className="flex items-center justify-center gap-2 bg-blue-600 text-white rounded-xl py-3 hover:bg-blue-700 transition"
+              className="
+              flex
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-blue-600
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-blue-700
+              "
             >
               <FiEdit />
               Edit
             </Link>
           )}
 
-          {/* Delete Only Open Jobs */}
-
           {isOpen && (
             <button
               onClick={handleDelete}
-              className="flex items-center justify-center gap-2 bg-red-600 text-white rounded-xl py-3 hover:bg-red-700 transition"
+              className="
+              flex
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-red-50
+              py-3
+              font-semibold
+              text-red-600
+              transition
+              hover:bg-red-100
+              "
             >
               <FiTrash2 />
               Delete
@@ -176,14 +333,73 @@ const JobCard = ({ job, onDelete }) => {
           )}
         </div>
 
-        {/* Marketplace Status Message */}
-
         {!isOpen && (
-          <div className="mt-4 text-center text-sm text-gray-500 bg-gray-50 rounded-xl py-3">
-            This job is {job.status.toLowerCase().replace("_", " ")}. Editing
-            and deletion are disabled.
-          </div>
+          <p
+            className="
+          mt-4
+          rounded-xl
+          bg-gray-100
+          px-4
+          py-3
+          text-center
+          text-sm
+          text-gray-500
+          "
+          >
+            This job is currently {job.status.toLowerCase().replace("_", " ")}.
+            Management actions are disabled.
+          </p>
         )}
+      </div>
+    </motion.article>
+  );
+};
+
+const InfoItem = ({ icon, title, value }) => {
+  return (
+    <div
+      className="
+    flex
+    items-center
+    gap-3
+    "
+    >
+      <div
+        className="
+      flex
+      h-10
+      w-10
+      items-center
+      justify-center
+      rounded-xl
+      bg-gray-100
+      text-emerald-600
+      "
+      >
+        {icon}
+      </div>
+
+      <div>
+        <p
+          className="
+        text-xs
+        text-gray-500
+        "
+        >
+          {title}
+        </p>
+
+        <p
+          className="
+        max-w-[120px]
+        truncate
+        text-sm
+        font-semibold
+        text-gray-900
+        "
+        >
+          {value}
+        </p>
       </div>
     </div>
   );

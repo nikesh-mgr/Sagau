@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 
-import { FiLogOut, FiUser, FiChevronDown, FiMenu } from "react-icons/fi";
+import {
+  FiLogOut,
+  FiUser,
+  FiChevronDown,
+  FiMenu,
+  FiShield,
+} from "react-icons/fi";
 
 import useAuthStore from "../../store/authStore";
 
@@ -12,11 +19,43 @@ import { successToast } from "../../utils/toast";
 const Topbar = ({ setSidebarOpen }) => {
   const navigate = useNavigate();
 
+  const dropdownRef = useRef(null);
+
   const [profileOpen, setProfileOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
 
   const logout = useAuthStore((state) => state.logout);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdown using ESC
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setProfileOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   const handleLogout = () => {
     const confirmLogout = window.confirm("Are you sure you want to logout?");
@@ -30,60 +69,84 @@ const Topbar = ({ setSidebarOpen }) => {
     navigate("/login");
   };
 
+  const userInitial = user?.fullName
+    ? user.fullName.charAt(0).toUpperCase()
+    : "U";
+
   return (
-    <header className="sticky top-0 z-40 h-16 md:h-20 bg-white/90 backdrop-blur border-b border-gray-200 flex items-center justify-between px-4 md:px-8">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-gray-100 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:h-20 lg:px-8">
+      {/* Mobile menu */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-700 transition"
+        aria-label="Open navigation menu"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 transition hover:bg-gray-100 md:hidden"
       >
         <FiMenu size={24} />
       </button>
 
-      <h1 className="md:hidden text-xl font-bold text-primary">Sagau</h1>
+      {/* Mobile logo */}
+      <h1 className="text-xl font-bold text-emerald-600 md:hidden">Sagau</h1>
 
-      <div className="flex items-center gap-3 md:gap-6 ml-auto">
+      {/* Right section */}
+      <div className="ml-auto flex items-center gap-3 sm:gap-5">
+        {/* Notifications */}
         <NotificationBell />
 
-        <div className="relative">
+        {/* Profile */}
+        <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2 md:gap-3 rounded-xl p-1.5 md:px-3 md:py-2 hover:bg-gray-50 transition"
+            aria-label="Open profile menu"
+            className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-gray-50 sm:px-3 sm:py-2"
           >
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-100 text-primary flex items-center justify-center font-bold">
-              {user?.fullName ? (
-                user.fullName.charAt(0).toUpperCase()
-              ) : (
-                <FiUser />
-              )}
+            {/* Avatar */}
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700 sm:h-10 sm:w-10">
+              {userInitial}
             </div>
 
-            <div className="hidden md:block text-left">
-              <p className="font-semibold text-gray-800 text-sm">
-                {user?.fullName}
+            {/* Desktop user information */}
+            <div className="hidden text-left md:block">
+              <p className="max-w-[130px] truncate text-sm font-semibold text-gray-800">
+                {user?.fullName || "User"}
               </p>
 
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+              <div className="mt-0.5 flex items-center gap-1 text-xs text-emerald-600">
+                <FiShield size={12} />
+
+                <span className="capitalize">{user?.role || "member"}</span>
+              </div>
             </div>
 
-            <FiChevronDown className="hidden md:block text-gray-500" />
+            <FiChevronDown className="hidden text-gray-400 md:block" />
           </button>
 
+          {/* Dropdown menu */}
+
           {profileOpen && (
-            <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 p-3">
+            <div className="absolute right-0 mt-3 w-56 max-w-[90vw] rounded-2xl border border-gray-100 bg-white p-3 shadow-xl animate-in fade-in slide-in-from-top-2">
+              {/* Mobile user info */}
+              <div className="mb-2 border-b border-gray-100 px-4 py-3 md:hidden">
+                <p className="font-semibold text-gray-800">{user?.fullName}</p>
+
+                <p className="text-sm capitalize text-gray-500">{user?.role}</p>
+              </div>
+
+              {/* Profile */}
               <button
                 onClick={() => {
-                  navigate("/profile");
+                  navigate("profile");
                   setProfileOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 transition hover:bg-gray-100"
               >
                 <FiUser />
                 Profile
               </button>
 
+              {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 transition"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-600 transition hover:bg-red-50"
               >
                 <FiLogOut />
                 Logout

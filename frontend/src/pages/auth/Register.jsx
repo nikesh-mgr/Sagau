@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiBriefcase,
+  FiShield,
+  FiUser,
+  FiUsers,
+} from "react-icons/fi";
 
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
@@ -14,7 +22,6 @@ const Register = () => {
   const navigate = useNavigate();
 
   const registerUser = useAuthStore((state) => state.register);
-
   const loading = useAuthStore((state) => state.loading);
 
   const [role, setRole] = useState("worker");
@@ -29,11 +36,8 @@ const Register = () => {
     try {
       const user = await registerUser({
         ...data,
-
         role,
       });
-
-      console.log("REGISTER USER:", user);
 
       successToast("Account created successfully");
 
@@ -47,121 +51,189 @@ const Register = () => {
         navigate("/");
       }
     } catch (error) {
-      console.log("REGISTER ERROR:", error);
-
       errorToast(error.response?.data?.message || "Registration failed");
     }
   };
 
   return (
-    <Card className="w-full max-w-lg p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Background */}
+      <div className="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-blue-300/30 blur-3xl"></div>
+      <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-indigo-300/30 blur-3xl"></div>
 
-        <p className="text-gray-500 mt-2">Join Sagau marketplace</p>
-      </div>
-
-      {/* Role Selection */}
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <button
-          type="button"
-          onClick={() => setRole("client")}
-          className={`
-          py-3
-          rounded-xl
-          border
-          font-semibold
-          transition
-
-          ${
-            role === "client"
-              ? "border-primary bg-emerald-50 text-primary"
-              : "border-gray-200"
-          }
-
-          `}
-        >
-          Client
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setRole("worker")}
-          className={`
-          py-3
-          rounded-xl
-          border
-          font-semibold
-          transition
-
-          ${
-            role === "worker"
-              ? "border-primary bg-emerald-50 text-primary"
-              : "border-gray-200"
-          }
-
-          `}
-        >
-          Worker
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit(submit)} className="space-y-5">
-        <Input
-          label="Full Name"
-          placeholder="Enter your full name"
-          {...register("fullName", {
-            required: "Full name is required",
-          })}
-          error={errors.fullName?.message}
-        />
-
-        <Input
-          label="Email"
-          type="email"
-          placeholder="Enter your email"
-          {...register("email", {
-            required: "Email is required",
-          })}
-          error={errors.email?.message}
-        />
-
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Create password"
-          {...register("password", {
-            required: "Password is required",
-
-            minLength: {
-              value: 6,
-              message: "Password must be at least 6 characters",
-            },
-          })}
-          error={errors.password?.message}
-        />
-
-        <Button loading={loading} type="submit">
-          Create Account
-        </Button>
-      </form>
-
-      <p className="text-center text-sm text-gray-600 mt-6">
-        Already have an account?
+      {/* Home Button */}
+      <div className="fixed left-5 top-5 z-30">
         <Link
-          to="/auth/login"
-          className="
-          text-primary
-          font-semibold
-          ml-2
-          hover:underline
-          "
+          to="/"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-500 hover:text-blue-600 hover:shadow-lg"
         >
-          Login
+          <FiArrowLeft className="text-base" />
+          Home
         </Link>
-      </p>
-    </Card>
+      </div>
+
+      {/* Left Section */}
+      <div className="relative hidden lg:flex lg:w-1/2 items-center justify-center px-16">
+        <div className="relative z-10 max-w-xl">
+          <div className="inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+            Join Sagau Today
+          </div>
+
+          <h1 className="mt-8 text-5xl font-extrabold leading-tight text-slate-900">
+            Build your career
+            <br />
+            <span className="text-blue-600">
+              or hire skilled professionals.
+            </span>
+          </h1>
+
+          <p className="mt-6 text-lg leading-8 text-slate-600">
+            Whether you're searching for opportunities or looking for trusted
+            talent, Sagau makes it simple, secure, and efficient.
+          </p>
+
+          <div className="mt-10 grid grid-cols-2 gap-5">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100">
+                <FiUsers className="text-xl text-blue-600" />
+              </div>
+
+              <h3 className="text-3xl font-bold text-slate-900">1000+</h3>
+
+              <p className="mt-2 text-sm text-slate-500">Verified Workers</p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-100">
+                <FiShield className="text-xl text-green-600" />
+              </div>
+
+              <h3 className="text-3xl font-bold text-slate-900">Secure</h3>
+
+              <p className="mt-2 text-sm text-slate-500">Trusted Marketplace</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Section */}
+      <div className="relative flex w-full items-center justify-center px-5 py-12 sm:px-8 lg:w-1/2">
+        <Card className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
+          <div className="mb-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-2xl font-bold text-white shadow-lg">
+              S
+            </div>
+
+            <h2 className="mt-6 text-3xl font-bold text-slate-900">
+              Create Account
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Join Nepal's trusted freelance & skilled worker marketplace.
+            </p>
+          </div>
+
+          {/* Role Selection */}
+
+          <div className="mb-6">
+            <p className="mb-4 text-sm font-semibold text-slate-700">
+              I want to join as
+            </p>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setRole("client")}
+                className={`group rounded-2xl border p-5 text-left transition-all duration-300 ${
+                  role === "client"
+                    ? "border-blue-600 bg-blue-50 shadow-lg ring-2 ring-blue-100"
+                    : "border-slate-200 bg-white hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg"
+                }`}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 transition-all duration-300 group-hover:scale-110">
+                  <FiBriefcase className="text-xl text-blue-600" />
+                </div>
+
+                <h3 className="font-bold text-slate-900">Client</h3>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("worker")}
+                className={`group rounded-2xl border p-5 text-left transition-all duration-300 ${
+                  role === "worker"
+                    ? "border-blue-600 bg-blue-50 shadow-lg ring-2 ring-blue-100"
+                    : "border-slate-200 bg-white hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg"
+                }`}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-100 transition-all duration-300 group-hover:scale-110">
+                  <FiUser className="text-xl text-green-600" />
+                </div>
+
+                <h3 className="font-bold text-slate-900">Worker</h3>
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(submit)} className="space-y-5">
+            <Input
+              label="Full Name"
+              placeholder="Enter your full name"
+              {...register("fullName", {
+                required: "Full name is required",
+              })}
+              error={errors.fullName?.message}
+            />
+
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="Enter your email"
+              {...register("email", {
+                required: "Email is required",
+              })}
+              error={errors.email?.message}
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              placeholder="Create a secure password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
+              error={errors.password?.message}
+            />
+
+            <Button
+              loading={loading}
+              type="submit"
+              className="group flex w-full items-center justify-center gap-2 rounded-xl py-3 text-base font-semibold transition-all duration-300"
+            >
+              Create Account
+              {!loading && (
+                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-8 border-t border-slate-200 pt-6 text-center">
+            <p className="text-sm text-slate-600">Already have an account?</p>
+
+            <Link
+              to="/auth/login"
+              className="mt-2 inline-flex items-center font-semibold text-blue-600 transition-all duration-300 hover:text-blue-700 hover:underline"
+            >
+              Login
+            </Link>
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 };
 

@@ -24,8 +24,16 @@ router.post(
   validate,
   createWorkerProfile,
 );
-
-router.get("/profile", protect, authorizeRoles("worker"), getMyWorkerProfile);
+router.get(
+  "/profile",
+  (req, res, next) => {
+    console.log("✅ /workers/profile route reached");
+    next();
+  },
+  protect,
+  authorizeRoles("worker"),
+  getMyWorkerProfile,
+);
 
 router.put(
   "/profile/update",

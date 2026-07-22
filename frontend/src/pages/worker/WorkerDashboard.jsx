@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
-import { FiBriefcase, FiFileText, FiCheckCircle, FiUser } from "react-icons/fi";
+import {
+  FiBriefcase,
+  FiFileText,
+  FiCheckCircle,
+  FiClock,
+  FiTrendingUp,
+} from "react-icons/fi";
 
-import { getAllJobs } from "../../api/jobApi";
-import { getMyApplications } from "../../api/applicationApi";
-import { getMyWorkerProfile } from "../../api/workerApi";
+import { motion } from "framer-motion";
+
+import { getWorkerDashboard } from "../../api/dashboardApi";
 
 import { errorToast } from "../../utils/toast";
 
+import Card from "../../components/common/Card";
+
+import Loader from "../../components/common/Loader";
+
 const WorkerDashboard = () => {
-  const [profile, setProfile] = useState(null);
-
-  const [stats, setStats] = useState({
-    availableJobs: 0,
-    applications: 0,
-    accepted: 0,
-    pending: 0,
-  });
-
-  const [recentJobs, setRecentJobs] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -29,137 +29,212 @@ const WorkerDashboard = () => {
 
   const loadDashboard = async () => {
     try {
-      setLoading(true);
+      const response = await getWorkerDashboard();
 
-      const [profileRes, jobsRes, applicationRes] = await Promise.all([
-        getMyWorkerProfile(),
-        getAllJobs(),
-        getMyApplications(),
-      ]);
-
-      const profileData = profileRes.data;
-
-      const jobs = jobsRes.data.jobs || [];
-
-      const applications = applicationRes.data || [];
-
-      setProfile(profileData);
-
-      setRecentJobs(jobs.slice(0, 5));
-
-      setStats({
-        availableJobs: jobs.length,
-        applications: applications.length,
-        accepted: applications.filter((item) => item.status === "ACCEPTED")
-          .length,
-        pending: applications.filter((item) => item.status === "PENDING")
-          .length,
-      });
+      setDashboard(response.data);
     } catch (error) {
       console.log(error);
 
-      errorToast("Failed to load dashboard.");
+      errorToast(error.response?.data?.message || "Failed to load dashboard");
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        Loading Dashboard...
-      </div>
-    );
+    return <Loader fullScreen text="Loading dashboard..." />;
   }
+
+  const stats = dashboard?.stats || {};
+
+  const cards = [
+    {
+      title: "Available Jobs",
+      value: stats.availableJobs || 0,
+      icon: <FiBriefcase />,
+      color: "bg-blue-100 text-blue-600",
+    },
+
+    {
+      title: "Applications",
+      value: stats.applications || 0,
+      icon: <FiFileText />,
+      color: "bg-purple-100 text-purple-600",
+    },
+
+    {
+      title: "Accepted Jobs",
+      value: stats.accepted || 0,
+      icon: <FiCheckCircle />,
+      color: "bg-green-100 text-green-600",
+    },
+
+    {
+      title: "Pending",
+      value: stats.pending || 0,
+      icon: <FiClock />,
+      color: "bg-yellow-100 text-yellow-600",
+    },
+  ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">
-          Welcome Back, {profile?.user?.fullName}
-        </h1>
+      {/* Welcome Header */}
 
-        <p className="text-gray-500 mt-2">
-          Find new opportunities and manage your work.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow p-6">
-          <FiBriefcase className="text-4xl text-emerald-600 mb-3" />
-
-          <p className="text-gray-500">Available Jobs</p>
-
-          <h2 className="text-3xl font-bold">{stats.availableJobs}</h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-6">
-          <FiFileText className="text-4xl text-blue-600 mb-3" />
-
-          <p className="text-gray-500">Applications</p>
-
-          <h2 className="text-3xl font-bold">{stats.applications}</h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-6">
-          <FiCheckCircle className="text-4xl text-green-600 mb-3" />
-
-          <p className="text-gray-500">Accepted</p>
-
-          <h2 className="text-3xl font-bold">{stats.accepted}</h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-6">
-          <FiUser className="text-4xl text-purple-600 mb-3" />
-
-          <p className="text-gray-500">Pending</p>
-
-          <h2 className="text-3xl font-bold">{stats.pending}</h2>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold">Latest Jobs</h2>
-
-          <Link
-            to="/worker/jobs"
-            className="text-primary font-medium hover:underline"
+      <div
+        className="
+        bg-gradient-to-r
+        from-emerald-600
+        to-blue-600
+        rounded-3xl
+        p-8
+        text-white
+        shadow-xl
+      "
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className="
+            h-14
+            w-14
+            rounded-2xl
+            bg-white/20
+            flex
+            items-center
+            justify-center
+          "
           >
-            View All
-          </Link>
-        </div>
-
-        {recentJobs.length === 0 ? (
-          <div className="p-6 text-gray-500">No jobs available.</div>
-        ) : (
-          <div>
-            {recentJobs.map((job) => (
-              <div
-                key={job._id}
-                className="flex justify-between items-center p-6 border-b last:border-none"
-              >
-                <div>
-                  <h3 className="font-semibold">{job.title}</h3>
-
-                  <p className="text-gray-500 text-sm mt-1">{job.location}</p>
-                </div>
-
-                <div className="text-right">
-                  <p className="font-semibold">NPR {job.budget}</p>
-
-                  <Link
-                    to={`/worker/jobs/${job._id}`}
-                    className="text-primary hover:underline text-sm"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
+            <FiTrendingUp className="text-3xl" />
           </div>
-        )}
+
+          <div>
+            <h1 className="text-3xl font-bold">
+              Welcome, {dashboard?.profile?.user?.fullName || "Worker"}
+            </h1>
+
+            <p className="mt-2 text-emerald-100">
+              Find jobs, manage applications and grow your career.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Stats */}
+
+      <div
+        className="
+        grid
+        grid-cols-1
+        sm:grid-cols-2
+        xl:grid-cols-4
+        gap-6
+      "
+      >
+        {cards.map((card, index) => (
+          <motion.div
+            key={index}
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: index * 0.1,
+            }}
+            whileHover={{
+              y: -5,
+            }}
+          >
+            <Card hover>
+              <div
+                className={`
+                  h-14
+                  w-14
+                  rounded-2xl
+                  flex
+                  items-center
+                  justify-center
+                  text-3xl
+                  ${card.color}
+                `}
+              >
+                {card.icon}
+              </div>
+
+              <p
+                className="
+                mt-5
+                text-gray-500
+                font-medium
+              "
+              >
+                {card.title}
+              </p>
+
+              <h2
+                className="
+                text-3xl
+                font-bold
+                mt-2
+                text-gray-900
+              "
+              >
+                {card.value}
+              </h2>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Quick Info */}
+
+      <Card>
+        <h2
+          className="
+          text-xl
+          font-bold
+          text-gray-900
+        "
+        >
+          Worker Profile
+        </h2>
+
+        <div
+          className="
+          mt-5
+          grid
+          md:grid-cols-3
+          gap-5
+        "
+        >
+          <div>
+            <p className="text-gray-500">Skills</p>
+
+            <p className="font-semibold mt-1">
+              {dashboard?.profile?.skills?.length || 0} Skills
+            </p>
+          </div>
+
+          <div>
+            <p className="text-gray-500">Experience</p>
+
+            <p className="font-semibold mt-1">
+              {dashboard?.profile?.experience || "Not added"}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-gray-500">Rating</p>
+
+            <p className="font-semibold mt-1">
+              {dashboard?.profile?.rating || 0}/5
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

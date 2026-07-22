@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
+  FiSearch,
+  FiBriefcase,
   FiClock,
   FiCheckCircle,
   FiXCircle,
-  FiSearch,
-  FiBriefcase,
 } from "react-icons/fi";
+
+import { motion } from "framer-motion";
 
 import { getMyApplications } from "../../api/applicationApi";
 
@@ -39,13 +41,13 @@ const MyApplications = () => {
 
       const response = await getMyApplications();
 
-      setApplications(response.data);
+      setApplications(response.data || []);
 
-      setFilteredApplications(response.data);
+      setFilteredApplications(response.data || []);
     } catch (error) {
       console.log(error);
 
-      errorToast("Failed to load applications.");
+      errorToast("Failed to load applications");
     } finally {
       setLoading(false);
     }
@@ -54,122 +56,265 @@ const MyApplications = () => {
   const filterApplications = () => {
     let data = [...applications];
 
-    if (search !== "") {
+    if (search.trim()) {
       data = data.filter((application) =>
-        application.job.title.toLowerCase().includes(search.toLowerCase()),
+        application.job?.title?.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
-    if (statusFilter !== "") {
+    if (statusFilter) {
       data = data.filter((application) => application.status === statusFilter);
     }
 
     setFilteredApplications(data);
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "PENDING":
-        return (
-          <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-semibold">
-            Pending
-          </span>
-        );
-
-      case "ACCEPTED":
-        return (
-          <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
-            Accepted
-          </span>
-        );
-
-      case "REJECTED":
-        return (
-          <span className="px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
-            Rejected
-          </span>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       total: applications.length,
-      pending: applications.filter(
-        (application) => application.status === "PENDING",
-      ).length,
-      accepted: applications.filter(
-        (application) => application.status === "ACCEPTED",
-      ).length,
-      rejected: applications.filter(
-        (application) => application.status === "REJECTED",
-      ).length,
+
+      pending: applications.filter((item) => item.status === "PENDING").length,
+
+      accepted: applications.filter((item) => item.status === "ACCEPTED")
+        .length,
+
+      rejected: applications.filter((item) => item.status === "REJECTED")
+        .length,
+    }),
+    [applications],
+  );
+
+  const StatusBadge = ({ status }) => {
+    const styles = {
+      PENDING: "bg-yellow-100 text-yellow-700",
+
+      ACCEPTED: "bg-green-100 text-green-700",
+
+      REJECTED: "bg-red-100 text-red-700",
     };
-  }, [applications]);
+
+    return (
+      <span
+        className={`
+        px-4
+        py-2
+        rounded-full
+        font-semibold
+        text-sm
+        ${styles[status]}
+        `}
+      >
+        {status}
+      </span>
+    );
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        Loading Applications...
+      <div
+        className="
+      h-96
+      flex
+      items-center
+      justify-center
+      "
+      >
+        <div className="text-center">
+          <div
+            className="
+          h-12
+          w-12
+          border-4
+          border-emerald-600
+          border-t-transparent
+          rounded-full
+          animate-spin
+          mx-auto
+          "
+          />
+
+          <p
+            className="
+          mt-4
+          text-gray-500
+          "
+          >
+            Loading Applications...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">My Applications</h1>
+    <div
+      className="
+    min-h-screen
+    bg-gradient-to-br
+    from-slate-50
+    via-white
+    to-emerald-50
+    p-4
+    sm:p-6
+    lg:p-8
+    space-y-8
+    "
+    >
+      {/* Header */}
 
-        <p className="text-gray-500 mt-2">
-          Track all jobs you have applied for.
+      <div>
+        <h1
+          className="
+        text-3xl
+        sm:text-4xl
+        font-bold
+        "
+        >
+          My Applications
+        </h1>
+
+        <p
+          className="
+        text-gray-500
+        mt-2
+        "
+        >
+          Track your job proposals and hiring status.
         </p>
       </div>
-      <div className="grid md:grid-cols-4 gap-5">
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-gray-500">Total</h3>
 
-          <p className="text-3xl font-bold mt-2">{stats.total}</p>
-        </div>
+      {/* Stats */}
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-yellow-600">Pending</h3>
+      <div
+        className="
+      grid
+      md:grid-cols-4
+      gap-6
+      "
+      >
+        {[
+          {
+            title: "Total",
+            value: stats.total,
+            icon: <FiBriefcase />,
+          },
 
-          <p className="text-3xl font-bold mt-2">{stats.pending}</p>
-        </div>
+          {
+            title: "Pending",
+            value: stats.pending,
+            icon: <FiClock />,
+          },
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-green-600">Accepted</h3>
+          {
+            title: "Accepted",
+            value: stats.accepted,
+            icon: <FiCheckCircle />,
+          },
 
-          <p className="text-3xl font-bold mt-2">{stats.accepted}</p>
-        </div>
+          {
+            title: "Rejected",
+            value: stats.rejected,
+            icon: <FiXCircle />,
+          },
+        ].map((item, index) => (
+          <motion.div
+            key={index}
+            whileHover={{
+              y: -5,
+            }}
+            className="
+            bg-white
+            rounded-3xl
+            shadow-lg
+            border
+            p-6
+            "
+          >
+            <div
+              className="
+            text-3xl
+            text-emerald-600
+            "
+            >
+              {item.icon}
+            </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-red-600">Rejected</h3>
+            <h2
+              className="
+            text-4xl
+            font-bold
+            mt-4
+            "
+            >
+              {item.value}
+            </h2>
 
-          <p className="text-3xl font-bold mt-2">{stats.rejected}</p>
-        </div>
+            <p
+              className="
+            text-gray-500
+            mt-2
+            "
+            >
+              {item.title}
+            </p>
+          </motion.div>
+        ))}
       </div>
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="grid md:grid-cols-2 gap-5">
+
+      {/* Filters */}
+
+      <div
+        className="
+      bg-white
+      rounded-3xl
+      shadow-lg
+      border
+      p-6
+      "
+      >
+        <div
+          className="
+        grid
+        md:grid-cols-2
+        gap-5
+        "
+        >
           <div className="relative">
-            <FiSearch className="absolute left-4 top-4 text-gray-400" />
+            <FiSearch
+              className="
+              absolute
+              left-4
+              top-4
+              text-gray-400
+              "
+            />
 
             <input
-              type="text"
-              placeholder="Search Job..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border rounded-xl pl-11 py-3 pr-4"
+              placeholder="Search job"
+              className="
+              w-full
+              border
+              rounded-xl
+              py-3
+              pl-11
+              pr-4
+              outline-none
+              focus:ring-2
+              focus:ring-primary
+              "
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border rounded-xl px-4"
+            className="
+            border
+            rounded-xl
+            px-4
+            "
           >
             <option value="">All Status</option>
 
@@ -180,94 +325,217 @@ const MyApplications = () => {
             <option value="REJECTED">Rejected</option>
           </select>
         </div>
-      </div>{" "}
+      </div>
+
+      {/* Applications */}
+
       {filteredApplications.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-12 text-center">
-          <FiBriefcase size={60} className="mx-auto text-gray-300 mb-5" />
+        <div
+          className="
+          bg-white
+          rounded-3xl
+          shadow-lg
+          border
+          p-12
+          text-center
+          "
+        >
+          <FiBriefcase
+            size={60}
+            className="
+              mx-auto
+              text-gray-300
+              mb-5
+              "
+          />
 
-          <h2 className="text-2xl font-bold">No Applications Found</h2>
+          <h2
+            className="
+            text-2xl
+            font-bold
+            "
+          >
+            No Applications Found
+          </h2>
 
-          <p className="text-gray-500 mt-3">
-            You haven't applied for any jobs yet or no applications match your
-            search.
+          <p
+            className="
+            text-gray-500
+            mt-3
+            "
+          >
+            Start applying for available jobs.
           </p>
 
           <Link
             to="/worker/jobs"
-            className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition"
+            className="
+              inline-block
+              mt-6
+              bg-primary
+              text-white
+              px-6
+              py-3
+              rounded-xl
+              "
           >
             Browse Jobs
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div
+          className="
+          space-y-6
+          "
+        >
           {filteredApplications.map((application) => (
-            <div
+            <motion.div
               key={application._id}
-              className="bg-white rounded-xl shadow border border-gray-200 p-6"
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              className="
+                bg-white
+                rounded-3xl
+                shadow-lg
+                border
+                p-6
+                "
             >
-              <div className="flex justify-between items-start flex-wrap gap-4">
+              <div
+                className="
+                flex
+                justify-between
+                items-start
+                flex-wrap
+                gap-4
+                "
+              >
                 <div>
-                  <h2 className="text-2xl font-semibold">
+                  <h2
+                    className="
+                    text-2xl
+                    font-bold
+                    "
+                  >
                     {application.job?.title}
                   </h2>
 
-                  <p className="text-gray-500 mt-1">
+                  <p
+                    className="
+                    text-gray-500
+                    mt-2
+                    "
+                  >
                     {application.job?.location}
                   </p>
                 </div>
 
-                {getStatusBadge(application.status)}
+                <StatusBadge status={application.status} />
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6 mt-8">
-                <div>
-                  <p className="text-gray-500 text-sm">Bid Amount</p>
+              <div
+                className="
+                grid
+                md:grid-cols-3
+                gap-6
+                mt-8
+                "
+              >
+                <Info
+                  title="Bid Amount"
+                  value={`NPR ${application.bidAmount}`}
+                />
 
-                  <p className="font-semibold text-lg">
-                    NPR {application.bidAmount}
-                  </p>
-                </div>
+                <Info
+                  title="Estimated Days"
+                  value={`${application.estimatedDays} Days`}
+                />
 
-                <div>
-                  <p className="text-gray-500 text-sm">Estimated Days</p>
-
-                  <p className="font-semibold text-lg">
-                    {application.estimatedDays} Days
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-gray-500 text-sm">Job Budget</p>
-
-                  <p className="font-semibold text-lg">
-                    NPR {application.job?.budget}
-                  </p>
-                </div>
+                <Info
+                  title="Job Budget"
+                  value={`NPR ${application.job?.budget}`}
+                />
               </div>
 
-              <div className="mt-8">
-                <h3 className="font-semibold mb-3">Proposal</h3>
+              <div
+                className="
+                mt-8
+                "
+              >
+                <h3
+                  className="
+                  font-bold
+                  mb-3
+                  "
+                >
+                  Proposal
+                </h3>
 
-                <p className="text-gray-600 leading-7 whitespace-pre-line">
+                <p
+                  className="
+                  text-gray-600
+                  leading-7
+                  "
+                >
                   {application.proposalText}
                 </p>
               </div>
 
-              <div className="flex justify-end mt-8">
+              <div
+                className="
+                flex
+                justify-end
+                mt-8
+                "
+              >
                 <Link
                   to={`/worker/jobs/${application.job?._id}`}
-                  className="bg-primary text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition"
+                  className="
+                    bg-primary
+                    text-white
+                    px-6
+                    py-3
+                    rounded-xl
+                    "
                 >
                   View Job
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      )}{" "}
+      )}
     </div>
   );
 };
+
+const Info = ({ title, value }) => (
+  <div>
+    <p
+      className="
+text-gray-500
+text-sm
+"
+    >
+      {title}
+    </p>
+
+    <p
+      className="
+font-semibold
+text-lg
+mt-1
+"
+    >
+      {value}
+    </p>
+  </div>
+);
 
 export default MyApplications;
