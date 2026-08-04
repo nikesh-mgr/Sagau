@@ -181,15 +181,13 @@ export const getAgreementReviews = asyncHandler(async (req, res) => {
 });
 
 // FIXED: Get reviews created by logged in user
-
 export const getMyReviews = asyncHandler(async (req, res) => {
   const reviews = await Review.find({
     reviewer: req.user._id,
   })
-    .populate("reviewee", "fullName email")
+    .populate("reviewee", "fullName email role")
     .populate({
       path: "agreement",
-
       populate: {
         path: "job",
         select: "title budget",
@@ -199,7 +197,28 @@ export const getMyReviews = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
+  const formattedReviews = await Promise.all(
+    reviews.map(async (review) => {
+      let revieweeProfile = null;
+
+      // If reviewee is worker
+      if (review.reviewee.role === "worker") {
+        revieweeProfile = await Worker.findOne({
+          user: review.reviewee._id,
+        }).select("profileImage skills rating totalReviews location");
+      }
+
+      return {
+        ...review.toObject(),
+
+        revieweeProfile,
+      };
+    }),
+  );
+
   res
     .status(200)
-    .json(new ApiResponse(200, "My reviews fetched successfully", reviews));
+    .json(
+      new ApiResponse(200, "My reviews fetched successfully", formattedReviews),
+    );
 });

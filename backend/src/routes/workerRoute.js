@@ -11,15 +11,15 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
 import validate from "../middleware/validateMiddleware.js";
-
+import { uploadProfile } from "../middleware/multerMidddleware.js";
 import { workerProfileValidator } from "../validators/profileValidator.js";
 
 const router = express.Router();
-
 router.post(
   "/create-profile",
   protect,
   authorizeRoles("worker"),
+  uploadProfile.single("profileImage"),
   workerProfileValidator,
   validate,
   createWorkerProfile,
@@ -34,11 +34,11 @@ router.get(
   authorizeRoles("worker"),
   getMyWorkerProfile,
 );
-
 router.put(
   "/profile/update",
   protect,
   authorizeRoles("worker"),
+  uploadProfile.single("profileImage"),
   updateWorkerProfile,
 );
 

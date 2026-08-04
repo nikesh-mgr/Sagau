@@ -3,11 +3,16 @@ import { useParams } from "react-router-dom";
 
 import {
   FiUser,
+  FiPhone,
+  FiMail,
+  FiMapPin,
   FiBriefcase,
-  FiCalendar,
   FiDollarSign,
-  FiCheckCircle,
+  FiCalendar,
   FiClock,
+  FiCheckCircle,
+  FiCircle,
+  FiAward,
 } from "react-icons/fi";
 
 import {
@@ -26,338 +31,305 @@ import { successToast, errorToast } from "../../utils/toast";
 const AgreementDetails = () => {
   const { agreementId } = useParams();
 
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
 
   const [agreement, setAgreement] = useState(null);
 
+  const [reviews, setReviews] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
-  const [updating, setUpdating] = useState(false);
-
-  const [hasReviewed, setHasReviewed] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     loadAgreement();
+    loadReviews();
   }, []);
 
   const loadAgreement = async () => {
     try {
-      setLoading(true);
+      const res = await getSingleAgreement(agreementId);
 
-      const response = await getSingleAgreement(agreementId);
-
-      const agreementData = response.data;
-
-      setAgreement(agreementData);
-
-      if (agreementData.status === "COMPLETED") {
-        try {
-          const reviewResponse = await getAgreementReviews(agreementId);
-
-          setHasReviewed(reviewResponse.data.length > 0);
-        } catch {
-          setHasReviewed(false);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-
-      errorToast(error?.response?.data?.message || "Failed to load agreement");
+      setAgreement(res.data);
+    } catch (err) {
+      errorToast(err?.response?.data?.message || "Failed to load agreement");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleComplete = async () => {
-    if (updating) return;
-
+  const loadReviews = async () => {
     try {
-      setUpdating(true);
+      const res = await getAgreementReviews(agreementId);
 
-      const response = await updateAgreementStatus(agreementId);
-
-      successToast(response.message);
-
-      await loadAgreement();
-    } catch (error) {
-      console.log(error);
-
-      errorToast(
-        error?.response?.data?.message || "Failed to update agreement",
-      );
-    } finally {
-      setUpdating(false);
-    }
+      setReviews(res.data || []);
+    } catch {}
   };
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "ACTIVE":
-        return "bg-emerald-100 text-emerald-700";
+  const updateStatus = async () => {
+    try {
+      setActionLoading(true);
 
-      case "COMPLETED":
-        return "bg-blue-100 text-blue-700";
+      await updateAgreementStatus(agreement._id);
 
-      case "CANCELLED":
-        return "bg-red-100 text-red-700";
+      successToast("Agreement updated successfully");
 
-      default:
-        return "bg-gray-100 text-gray-700";
+      loadAgreement();
+    } catch (err) {
+      errorToast(err?.response?.data?.message || "Update failed");
+    } finally {
+      setActionLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="h-96 flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-12 w-12 mx-auto rounded-full border-4 border-emerald-600 border-t-transparent animate-spin"></div>
-
-          <p className="mt-4 text-gray-500">Loading Agreement...</p>
-        </div>
+      <div className="flex justify-center items-center h-[60vh]">
+        Loading...
       </div>
     );
   }
+  const isWorker = user?.role === "worker";
+  const isClient = user?.role === "client";
 
-  if (!agreement) {
-    return (
-      <div className="h-96 flex items-center justify-center">
-        <h2 className="text-xl font-semibold">Agreement not found.</h2>
-      </div>
-    );
-  }
-
-  const isWorker = agreement.worker?._id === user?._id;
-
-  const isClient = agreement.client?._id === user?._id;
   return (
-    <div className="space-y-8">
-      {/* =======================================
-          HEADER
-      ======================================== */}
-      <div className="flex flex-col lg:flex-row justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Agreement Details
-          </h1>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+        <div className="flex flex-col lg:flex-row justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Agreement Details
+            </h1>
 
-          <p className="mt-2 text-slate-500">
-            View the agreement progress and completion status.
-          </p>
-        </div>
+            <p className="text-slate-500 mt-2">
+              View agreement progress and manage work completion.
+            </p>
+          </div>
 
-        <div>
-          <span
-            className={`px-5 py-2 rounded-full font-semibold ${getStatusStyle(
-              agreement.status,
-            )}`}
-          >
-            {agreement.status}
-          </span>
-        </div>
-      </div>
-      {/* =======================================
-          AGREEMENT INFORMATION
-      ======================================== */}
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          <InfoItem
-            icon={<FiBriefcase />}
-            title="Job"
-            value={agreement.jobTitle}
-          />
-
-          <InfoItem
-            icon={<FiDollarSign />}
-            title="Budget"
-            value={`NPR ${agreement.agreedBudget}`}
-          />
-
-          <InfoItem
-            icon={<FiCalendar />}
-            title="Estimated Time"
-            value={`${agreement.estimatedDays} Days`}
-          />
-
-          <InfoItem
-            icon={<FiClock />}
-            title="Started"
-            value={new Date(agreement.startedAt).toLocaleDateString()}
-          />
-
-          <InfoItem
-            icon={<FiUser />}
-            title="Client"
-            value={agreement.client?.fullName}
-          />
-
-          <InfoItem
-            icon={<FiUser />}
-            title="Worker"
-            value={agreement.worker?.fullName}
-          />
+          <div>
+            <span
+              className={`px-5 py-3 rounded-full font-semibold text-sm ${
+                agreement.status === "COMPLETED"
+                  ? "bg-green-100 text-green-700"
+                  : agreement.status === "ACTIVE"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-red-100 text-red-700"
+              }`}
+            >
+              {agreement.status}
+            </span>
+          </div>
         </div>
       </div>
-      {/* =======================================
-          PROPOSAL
-      ======================================== */}
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
-        <h2 className="text-xl font-bold mb-5">Accepted Proposal</h2>
+      {/* Job Information */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <FiBriefcase className="text-emerald-600 text-xl" />
+          </div>
 
-        <div className="rounded-2xl bg-slate-50 p-6 leading-7 text-slate-600">
-          {agreement.proposalText}
+          <div>
+            <h2 className="text-xl font-bold">{agreement.jobTitle}</h2>
+
+            <p className="text-slate-500">Agreement Information</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <div className="flex items-center gap-2 text-slate-500">
+              <FiDollarSign />
+              Budget
+            </div>
+
+            <p className="mt-3 text-2xl font-bold">
+              NPR {agreement.agreedBudget}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <div className="flex items-center gap-2 text-slate-500">
+              <FiClock />
+              Duration
+            </div>
+
+            <p className="mt-3 text-2xl font-bold">
+              {agreement.estimatedDays} Days
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <div className="flex items-center gap-2 text-slate-500">
+              <FiCalendar />
+              Started
+            </div>
+
+            <p className="mt-3 text-lg font-semibold">
+              {new Date(agreement.startedAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
       </div>
-      {/* =======================================
-          COMPLETION STATUS
-      ======================================== */}
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
-        <h2 className="text-xl font-bold mb-6">Completion Progress</h2>
+      {/* Participants */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Client */}
+
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-xl font-bold mb-5">Client</h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <FiUser className="text-emerald-600" />
+
+              <span className="font-medium">{agreement.client?.fullName}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <FiMail className="text-emerald-600" />
+
+              <span>{agreement.client?.email}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <FiPhone className="text-emerald-600" />
+
+              <span>{agreement.clientPhone || "Not Available"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Worker */}
+
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-xl font-bold mb-5">Worker</h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <FiUser className="text-blue-600" />
+
+              <span className="font-medium">{agreement.worker?.fullName}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <FiMail className="text-blue-600" />
+
+              <span>{agreement.worker?.email}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <FiPhone className="text-blue-600" />
+
+              <span>{agreement.workerPhone || "Not Available"}</span>
+            </div>
+          </div>
+        </div>
+      </div>{" "}
+      {/* Progress */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-xl font-bold mb-6">Agreement Progress</h2>
 
         <div className="space-y-5">
-          <StatusBox
-            title="Worker Completed Work"
-            completed={agreement.workerCompleted}
-            date={agreement.workerCompletedAt}
-          />
+          {/* Worker */}
 
-          <StatusBox
-            title="Client Approved Work"
-            completed={agreement.clientCompleted}
-            date={agreement.clientCompletedAt}
-          />
-        </div>
-      </div>
-      {/* =======================================
-          ACTION SECTION
-      ======================================== */}
-      {agreement.status === "ACTIVE" && (
-        <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
-          {isWorker ? (
-            agreement.workerCompleted ? (
-              <MessageBox>
-                <div className="flex items-center gap-3">
-                  <FiClock className="text-lg" />
-                  Waiting for the client to approve your completed work.
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-5">
+            <div className="flex items-center gap-4">
+              {agreement.workerCompleted ? (
+                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <FiCheckCircle className="text-green-600 text-xl" />
                 </div>
-              </MessageBox>
-            ) : (
-              <button
-                onClick={handleComplete}
-                disabled={updating}
-                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition disabled:opacity-50"
-              >
-                {updating ? "Submitting..." : "Mark Work as Completed"}
-              </button>
-            )
-          ) : agreement.workerCompleted ? (
-            agreement.clientCompleted ? (
-              <MessageBox>
-                <div className="flex items-center gap-3">
-                  <FiCheckCircle className="text-lg" />
-                  Agreement has been completed successfully.
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center">
+                  <FiCircle className="text-slate-500 text-xl" />
                 </div>
-              </MessageBox>
-            ) : (
-              <button
-                onClick={handleComplete}
-                disabled={updating}
-                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50"
-              >
-                {updating ? "Approving..." : "Approve Completion"}
-              </button>
-            )
-          ) : (
-            <MessageBox>
-              <div className="flex items-center gap-3">
-                <FiClock className="text-lg" />
-                Waiting for the worker to mark this job as completed.
+              )}
+
+              <div>
+                <h3 className="font-semibold">Worker Completion</h3>
+
+                <p className="text-sm text-slate-500">
+                  {agreement.workerCompleted
+                    ? "Worker has submitted the work."
+                    : "Waiting for worker to submit work."}
+                </p>
               </div>
-            </MessageBox>
-          )}
-        </div>
-      )}{" "}
-      {/* =======================================
-          REVIEW SECTION
-      ======================================== */}
-      {agreement.status === "COMPLETED" && !hasReviewed && isClient && (
-        <ReviewForm
-          agreementId={agreement._id}
-          revieweeId={agreement.worker._id}
-          onSuccess={() => {
-            successToast("Review submitted successfully");
-            setHasReviewed(true);
-          }}
-        />
-      )}
-      {agreement.status === "COMPLETED" && hasReviewed && (
-        <MessageBox>
-          <div className="flex items-center gap-3">
-            <FiCheckCircle className="text-lg text-green-600" />
+            </div>
 
-            <span>Review has already been submitted.</span>
+            {isWorker &&
+              !agreement.workerCompleted &&
+              agreement.status === "ACTIVE" && (
+                <button
+                  onClick={updateStatus}
+                  disabled={actionLoading}
+                  className="px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                >
+                  {actionLoading ? "Submitting..." : "Mark Work Completed"}
+                </button>
+              )}
           </div>
-        </MessageBox>
-      )}
+
+          {/* Client */}
+
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-5">
+            <div className="flex items-center gap-4">
+              {agreement.clientCompleted ? (
+                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <FiCheckCircle className="text-green-600 text-xl" />
+                </div>
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center">
+                  <FiCircle className="text-slate-500 text-xl" />
+                </div>
+              )}
+
+              <div>
+                <h3 className="font-semibold">Client Approval</h3>
+
+                <p className="text-sm text-slate-500">
+                  {agreement.clientCompleted
+                    ? "Client approved the work."
+                    : agreement.workerCompleted
+                      ? "Waiting for client approval."
+                      : "Client can approve after worker submits."}
+                </p>
+              </div>
+            </div>
+
+            {isClient &&
+              agreement.workerCompleted &&
+              !agreement.clientCompleted &&
+              agreement.status === "ACTIVE" && (
+                <button
+                  onClick={updateStatus}
+                  disabled={actionLoading}
+                  className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {actionLoading ? "Approving..." : "Approve Completion"}
+                </button>
+              )}
+          </div>
+        </div>
+
+        {agreement.status === "COMPLETED" && (
+          <div className="mt-6 rounded-2xl bg-green-50 border border-green-200 p-6">
+            <div className="flex items-center gap-3">
+              <FiCheckCircle className="text-green-600 text-2xl" />
+
+              <div>
+                <h3 className="font-bold text-green-700">
+                  Agreement Completed
+                </h3>
+
+                <p className="text-green-600">
+                  Both worker and client have confirmed completion.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>{" "}
     </div>
   );
 };
-
-/* =======================================
-    SMALL COMPONENTS
-======================================= */
-
-const InfoItem = ({ icon, title, value }) => (
-  <div className="flex items-start gap-4 rounded-2xl bg-slate-50 p-5">
-    <div className="h-12 w-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
-      {icon}
-    </div>
-
-    <div>
-      <p className="text-sm text-slate-500">{title}</p>
-
-      <div className="mt-1 font-semibold text-slate-900">{value}</div>
-    </div>
-  </div>
-);
-
-const StatusBox = ({ title, completed, date }) => (
-  <div
-    className={`rounded-2xl border p-5 ${
-      completed
-        ? "bg-green-50 border-green-200"
-        : "bg-yellow-50 border-yellow-200"
-    }`}
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {completed ? (
-          <FiCheckCircle className="text-green-600 text-xl" />
-        ) : (
-          <FiClock className="text-yellow-600 text-xl" />
-        )}
-
-        <div>
-          <p className="font-semibold">{title}</p>
-
-          <p className="text-sm text-slate-500">
-            {completed ? "Completed" : "Pending"}
-          </p>
-        </div>
-      </div>
-
-      {completed && date && (
-        <span className="text-sm text-slate-500">
-          {new Date(date).toLocaleString()}
-        </span>
-      )}
-    </div>
-  </div>
-);
-
-const MessageBox = ({ children }) => (
-  <div className="rounded-2xl bg-blue-50 border border-blue-200 p-5 text-blue-700 font-medium">
-    {children}
-  </div>
-);
 
 export default AgreementDetails;

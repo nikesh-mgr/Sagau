@@ -40,6 +40,10 @@ const workerSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    profileImage: {
+      type: String,
+      default: "",
+    },
     availability: {
       type: String,
       enum: ["Available", "Busy", "Not Available"],

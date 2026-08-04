@@ -18,6 +18,8 @@ import { updateApplicationStatus } from "../../api/applicationApi";
 
 import { successToast, errorToast } from "../../utils/toast";
 
+const SERVER_URL = "http://localhost:5000";
+
 const ApplicantCard = ({ application, refresh }) => {
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +30,10 @@ const ApplicantCard = ({ application, refresh }) => {
   const job = application?.job || {};
 
   const isHired = application.status === "ACCEPTED";
+
+  const profileImage = profile?.profileImage
+    ? `${SERVER_URL}${profile.profileImage}`
+    : null;
 
   const updateStatus = async (status) => {
     if (loading) return;
@@ -93,12 +99,26 @@ const ApplicantCard = ({ application, refresh }) => {
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl">
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
+
       <div className="bg-gradient-to-r from-emerald-50 via-white to-blue-50 p-6">
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-blue-600 text-3xl font-bold text-white shadow-lg">
-              {worker.fullName?.charAt(0) || "W"}
+            {/* PROFILE IMAGE */}
+
+            <div className="flex h-20 w-20 overflow-hidden items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-blue-600 text-3xl font-bold text-white shadow-lg">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt={worker.fullName}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                worker.fullName?.charAt(0) || "W"
+              )}
             </div>
 
             <div>
@@ -112,8 +132,6 @@ const ApplicantCard = ({ application, refresh }) => {
                 )}
               </div>
 
-              {/* EMAIL */}
-
               <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
                 <FiMail />
 
@@ -126,20 +144,12 @@ const ApplicantCard = ({ application, refresh }) => {
                 )}
               </div>
 
-              {/* LOCATION */}
-
               <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
                 <FiMapPin />
 
-                {isHired ? (
-                  <span>{profile.location || "Location not added"}</span>
-                ) : (
-                  <span>
-                    {profile.city ||
-                      profile.location?.split(",")[0] ||
-                      "Location"}
-                  </span>
-                )}
+                <span>
+                  {profile.address || profile.location || "Location not added"}
+                </span>
               </div>
             </div>
           </div>
@@ -151,7 +161,9 @@ const ApplicantCard = ({ application, refresh }) => {
           </span>
         </div>
       </div>
-      {/* ================= JOB ================= */}
+
+      {/* JOB */}
+
       <div className="border-b border-slate-100 p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100">
@@ -175,8 +187,10 @@ const ApplicantCard = ({ application, refresh }) => {
             {job.location || "Location not available"}
           </div>
         </div>
-      </div>{" "}
-      {/* ================= WORKER OVERVIEW ================= */}
+      </div>
+
+      {/* WORKER OVERVIEW */}
+
       <div className="border-b border-slate-100 p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -190,6 +204,7 @@ const ApplicantCard = ({ application, refresh }) => {
           {profile.successRate && (
             <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-green-700">
               <FiTrendingUp />
+
               <span className="font-semibold">
                 {profile.successRate}% Success
               </span>
@@ -201,7 +216,7 @@ const ApplicantCard = ({ application, refresh }) => {
           {stats.map((item, index) => (
             <div
               key={index}
-              className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-emerald-200 hover:bg-emerald-50"
+              className="rounded-2xl border border-slate-100 bg-slate-50 p-5"
             >
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <span className="text-lg text-emerald-600">{item.icon}</span>
@@ -216,100 +231,47 @@ const ApplicantCard = ({ application, refresh }) => {
           ))}
         </div>
       </div>
-      {/* ================= SKILLS ================= */}
+
+      {/* SKILLS */}
+
       <div className="border-b border-slate-100 p-6">
-        <div className="mb-5">
-          <h3 className="text-lg font-bold text-slate-900">Skills</h3>
+        <h3 className="text-lg font-bold text-slate-900">Skills</h3>
 
-          <p className="text-sm text-slate-500">
-            Skills provided by the worker
-          </p>
-        </div>
-
-        {profile.skills?.length ? (
-          <div className="flex flex-wrap gap-3">
-            {profile.skills.map((skill) => (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {profile.skills?.length ? (
+            profile.skills.map((skill) => (
               <span
                 key={skill}
-                className="
-                  rounded-full
-                  bg-emerald-100
-                  px-4
-                  py-2
-                  text-sm
-                  font-medium
-                  text-emerald-700
-                "
+                className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700"
               >
                 {skill}
               </span>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">
-            No skills added
-          </div>
-        )}
+            ))
+          ) : (
+            <span className="text-slate-500">No skills added</span>
+          )}
+        </div>
       </div>
-      {/* ================= PROPOSAL ================= */}
+
+      {/* PROPOSAL */}
+
       <div className="border-b border-slate-100 p-6">
-        <div className="mb-5">
-          <h3 className="text-lg font-bold text-slate-900">Worker Proposal</h3>
+        <h3 className="text-lg font-bold text-slate-900">Worker Proposal</h3>
 
-          <p className="text-sm text-slate-500">
-            Why this worker is suitable for the job
-          </p>
-        </div>
-
-        <div
-          className="
-            rounded-2xl
-            bg-slate-50
-            p-6
-            leading-8
-            text-slate-700
-          "
-        >
-          {application.proposalText ||
-            "No proposal was submitted by the worker."}
+        <div className="mt-4 rounded-2xl bg-slate-50 p-6 leading-8 text-slate-700">
+          {application.proposalText || "No proposal submitted"}
         </div>
       </div>
-      {/* ================= PRIVACY NOTICE ================= */}
-      {!isHired && (
-        <div className="mx-6 my-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
-          <h4 className="font-semibold text-blue-700">Privacy Protection</h4>
 
-          <p className="mt-2 text-sm leading-7 text-blue-600">
-            Worker contact details such as email, phone number, and detailed
-            address are protected until you hire this worker. This helps ensure
-            communication and agreements stay within the Sagau platform.
-          </p>
-        </div>
-      )}{" "}
-      {/* ================= ACTIONS ================= */}
+      {/* ACTIONS */}
+
       {application.status === "PENDING" && (
         <div className="border-t border-slate-100 p-6">
           <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
             <button
               disabled={loading}
               onClick={() => updateStatus("REJECTED")}
-              className="
-                flex
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                border
-                border-red-300
-                px-6
-                py-3
-                font-semibold
-                text-red-600
-                transition
-                hover:bg-red-50
-                disabled:cursor-not-allowed
-                disabled:opacity-50
-              "
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-300 px-6 py-3 font-semibold text-red-600 hover:bg-red-50"
             >
               <FiXCircle />
               Reject Application
@@ -318,22 +280,7 @@ const ApplicantCard = ({ application, refresh }) => {
             <button
               disabled={loading}
               onClick={() => updateStatus("ACCEPTED")}
-              className="
-                flex
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-emerald-600
-                px-6
-                py-3
-                font-semibold
-                text-white
-                transition
-                hover:bg-emerald-700
-                disabled:cursor-not-allowed
-                disabled:opacity-50
-              "
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-700"
             >
               <FiCheckCircle />
 
@@ -342,68 +289,30 @@ const ApplicantCard = ({ application, refresh }) => {
           </div>
         </div>
       )}
-      {/* ================= ACCEPTED ================= */}
+
       {application.status === "ACCEPTED" && (
         <div className="border-t border-slate-100 p-6">
-          <div
-            className="
-              rounded-2xl
-              border
-              border-green-200
-              bg-green-50
-              p-6
-            "
-          >
-            <div className="flex items-start gap-4">
-              <div className="rounded-full bg-green-100 p-3">
-                <FiCheckCircle className="text-2xl text-green-600" />
-              </div>
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-6">
+            <h3 className="text-lg font-bold text-green-700">
+              Worker Hired Successfully
+            </h3>
 
-              <div>
-                <h3 className="text-lg font-bold text-green-700">
-                  Worker Hired Successfully
-                </h3>
-
-                <p className="mt-2 text-green-600 leading-7">
-                  This applicant has been hired. An agreement has been created
-                  and contact information is now available.
-                </p>
-              </div>
-            </div>
+            <p className="mt-2 text-green-600">
+              Agreement has been created and contact details are now available.
+            </p>
           </div>
         </div>
       )}
-      {/* ================= REJECTED ================= */}
+
       {application.status === "REJECTED" && (
         <div className="border-t border-slate-100 p-6">
-          <div
-            className="
-              rounded-2xl
-              border
-              border-red-200
-              bg-red-50
-              p-6
-            "
-          >
-            <div className="flex items-start gap-4">
-              <div className="rounded-full bg-red-100 p-3">
-                <FiXCircle className="text-2xl text-red-600" />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-red-700">
-                  Application Rejected
-                </h3>
-
-                <p className="mt-2 text-red-600 leading-7">
-                  This application has been rejected. The worker has been
-                  notified and can continue applying to other jobs.
-                </p>
-              </div>
-            </div>
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <h3 className="text-lg font-bold text-red-700">
+              Application Rejected
+            </h3>
           </div>
         </div>
-      )}{" "}
+      )}
     </div>
   );
 };

@@ -12,6 +12,9 @@ import {
   FiCheckCircle,
   FiClock,
   FiXCircle,
+  FiUser,
+  FiMapPin,
+  FiTrendingUp,
 } from "react-icons/fi";
 
 import { motion } from "framer-motion";
@@ -19,6 +22,8 @@ import { motion } from "framer-motion";
 import { getMyAgreements } from "../../api/agreementApi";
 
 import { errorToast } from "../../utils/toast";
+
+const SERVER_URL = "http://localhost:5000";
 
 const Agreements = () => {
   const [agreements, setAgreements] = useState([]);
@@ -50,18 +55,16 @@ const Agreements = () => {
   const filteredAgreements = useMemo(() => {
     let data = [...agreements];
 
-    if (search) {
+    if (search.trim()) {
       data = data.filter(
-        (agreement) =>
-          agreement.job?.title?.toLowerCase().includes(search.toLowerCase()) ||
-          agreement.client?.fullName
-            ?.toLowerCase()
-            .includes(search.toLowerCase()),
+        (item) =>
+          item.job?.title?.toLowerCase().includes(search.toLowerCase()) ||
+          item.client?.fullName?.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
     if (status) {
-      data = data.filter((agreement) => agreement.status === status);
+      data = data.filter((item) => item.status === status);
     }
 
     return data;
@@ -69,55 +72,69 @@ const Agreements = () => {
 
   const stats = [
     {
-      title: "Total",
+      title: "Total Agreements",
       value: agreements.length,
       icon: <FiFileText />,
-      color: "text-blue-600",
+      color: "bg-blue-500",
     },
 
     {
       title: "Active",
-      value: agreements.filter((item) => item.status === "ACTIVE").length,
+      value: agreements.filter((x) => x.status === "ACTIVE").length,
       icon: <FiClock />,
-      color: "text-green-600",
+      color: "bg-green-500",
     },
 
     {
       title: "Completed",
-      value: agreements.filter((item) => item.status === "COMPLETED").length,
+      value: agreements.filter((x) => x.status === "COMPLETED").length,
       icon: <FiCheckCircle />,
-      color: "text-emerald-600",
+      color: "bg-emerald-500",
     },
 
     {
       title: "Cancelled",
-      value: agreements.filter((item) => item.status === "CANCELLED").length,
+      value: agreements.filter((x) => x.status === "CANCELLED").length,
       icon: <FiXCircle />,
-      color: "text-red-600",
+      color: "bg-red-500",
     },
   ];
 
   const statusStyle = (status) => {
-    if (status === "ACTIVE") return "bg-green-100 text-green-700";
+    switch (status) {
+      case "ACTIVE":
+        return "bg-green-100 text-green-700";
 
-    if (status === "COMPLETED") return "bg-blue-100 text-blue-700";
+      case "COMPLETED":
+        return "bg-blue-100 text-blue-700";
 
-    if (status === "CANCELLED") return "bg-red-100 text-red-700";
+      case "CANCELLED":
+        return "bg-red-100 text-red-700";
 
-    return "bg-gray-100 text-gray-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
   };
 
   if (loading) {
     return (
-      <div
-        className="
-      h-96
-      flex
-      justify-center
-      items-center
-      "
-      >
-        Loading Agreements...
+      <div className="min-h-[500px] flex items-center justify-center">
+        <div className="text-center">
+          <div
+            className="
+          h-14
+          w-14
+          rounded-full
+          border-4
+          border-emerald-600
+          border-t-transparent
+          animate-spin
+          mx-auto
+          "
+          />
+
+          <p className="mt-5 text-gray-500">Loading agreements...</p>
+        </div>
       </div>
     );
   }
@@ -130,59 +147,96 @@ bg-gradient-to-br
 from-slate-50
 via-white
 to-emerald-50
-p-6
+p-4
+sm:p-6
+lg:p-8
 space-y-8
 "
     >
-      {/* Header */}
+      {/* HERO */}
 
-      <div>
-        <h1
-          className="
-text-3xl
-font-bold
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="
+rounded-3xl
+bg-gradient-to-r
+from-emerald-600
+to-teal-700
+p-8
+text-white
+shadow-xl
 "
-        >
-          My Agreements
-        </h1>
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold">My Agreements</h1>
 
-        <p
-          className="
-text-gray-500
-mt-2
+            <p
+              className="
+mt-3
+text-emerald-100
+max-w-xl
 "
-        >
-          Manage accepted jobs and work progress.
-        </p>
-      </div>
+            >
+              Track your hired projects, agreements and work progress.
+            </p>
+          </div>
 
-      {/* Stats */}
+          <div
+            className="
+flex
+items-center
+gap-3
+bg-white/20
+px-5
+py-3
+rounded-2xl
+"
+          >
+            <FiTrendingUp size={22} />
+
+            <span className="font-semibold">{agreements.length} Projects</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* STATS */}
 
       <div
         className="
 grid
-md:grid-cols-4
+grid-cols-1
+sm:grid-cols-2
+xl:grid-cols-4
 gap-6
 "
       >
         {stats.map((item, index) => (
           <motion.div
             key={index}
-            whileHover={{
-              y: -5,
-            }}
+            whileHover={{ y: -5 }}
             className="
 bg-white
 rounded-3xl
-shadow-lg
 border
+shadow-sm
 p-6
 "
           >
             <div
               className={`
-text-3xl
+
+h-12
+w-12
+rounded-2xl
 ${item.color}
+text-white
+flex
+items-center
+justify-center
+text-xl
+
 `}
             >
               {item.icon}
@@ -192,7 +246,7 @@ ${item.color}
               className="
 text-3xl
 font-bold
-mt-4
+mt-5
 "
             >
               {item.value}
@@ -210,29 +264,25 @@ mt-2
         ))}
       </div>
 
-      {/* Search Filter */}
+      {/* FILTER */}
 
       <div
         className="
 bg-white
 rounded-3xl
-shadow
 border
+shadow-sm
 p-6
 "
       >
         <div
           className="
 grid
-md:grid-cols-2
+md:grid-cols-3
 gap-5
 "
         >
-          <div
-            className="
-relative
-"
-          >
+          <div className="relative">
             <FiSearch
               className="
 absolute
@@ -243,17 +293,16 @@ text-gray-400
             />
 
             <input
-              placeholder="
-Search job or client...
-"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search job or client..."
               className="
 w-full
-border
 rounded-xl
-pl-11
+border
 py-3
+pl-11
+pr-4
 outline-none
 focus:ring-2
 focus:ring-emerald-500
@@ -265,8 +314,8 @@ focus:ring-emerald-500
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="
-border
 rounded-xl
+border
 px-4
 py-3
 outline-none
@@ -280,15 +329,34 @@ outline-none
 
             <option value="CANCELLED">Cancelled</option>
           </select>
+
+          <button
+            onClick={() => {
+              setSearch("");
+
+              setStatus("");
+            }}
+            className="
+rounded-xl
+border
+hover:bg-gray-50
+transition
+"
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
+
+      {/* AGREEMENTS */}
 
       {filteredAgreements.length === 0 ? (
         <div
           className="
 bg-white
 rounded-3xl
-shadow
+border
+shadow-sm
 p-12
 text-center
 "
@@ -313,62 +381,68 @@ mt-5
 
           <p
             className="
-text-gray-500
 mt-2
+text-gray-500
 "
           >
             Accepted jobs will appear here.
           </p>
         </div>
       ) : (
-        <div
-          className="
-space-y-6
-"
-        >
+        <div className="space-y-6">
           {filteredAgreements.map((agreement) => (
             <motion.div
               key={agreement._id}
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               className="
 bg-white
 rounded-3xl
-shadow-lg
 border
+shadow-sm
 p-6
+hover:shadow-xl
+transition
 "
             >
-              {/* Header */}
-
               <div
                 className="
 flex
-justify-between
-flex-wrap
+flex-col
+md:flex-row
+md:justify-between
 gap-5
 "
               >
-                <div>
+                <div className="flex gap-4">
                   <div
                     className="
+h-14
+w-14
+rounded-2xl
+bg-emerald-100
 flex
 items-center
-gap-3
+justify-center
+overflow-hidden
 "
                   >
-                    <FiBriefcase
-                      className="
+                    {agreement.client?.profileImage ? (
+                      <img
+                        src={`${SERVER_URL}${agreement.client.profileImage}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <FiUser
+                        className="
 text-emerald-600
+text-2xl
 "
-                    />
+                      />
+                    )}
+                  </div>
 
+                  <div>
                     <h2
                       className="
 text-xl
@@ -377,17 +451,16 @@ font-bold
                     >
                       {agreement.job?.title}
                     </h2>
-                  </div>
 
-                  <p
-                    className="
+                    <p
+                      className="
 text-gray-500
-mt-2
+mt-1
 "
-                  >
-                    Client:
-                    {agreement.client?.fullName}
-                  </p>
+                    >
+                      Client: {agreement.client?.fullName}
+                    </p>
+                  </div>
                 </div>
 
                 <span
@@ -396,6 +469,7 @@ px-4
 py-2
 rounded-full
 font-semibold
+h-fit
 ${statusStyle(agreement.status)}
 `}
                 >
@@ -403,148 +477,84 @@ ${statusStyle(agreement.status)}
                 </span>
               </div>
 
-              {/* Information */}
-
               <div
                 className="
 grid
 md:grid-cols-3
-gap-6
+gap-5
 mt-8
 "
               >
-                <div
-                  className="
-flex
-gap-3
-"
-                >
-                  <FiDollarSign
-                    className="
-text-emerald-600
-"
-                  />
+                <div className="flex gap-3">
+                  <FiDollarSign className="text-emerald-600" />
 
                   <div>
-                    <p
-                      className="
-text-gray-500
-text-sm
-"
-                    >
-                      Budget
-                    </p>
+                    <p className="text-sm text-gray-500">Budget</p>
 
-                    <p
-                      className="
-font-semibold
-"
-                    >
-                      NPR {agreement.job?.budget}
+                    <p className="font-bold">NPR {agreement.job?.budget}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <FiCalendar className="text-emerald-600" />
+
+                  <div>
+                    <p className="text-sm text-gray-500">Started</p>
+
+                    <p className="font-bold">
+                      {agreement.startedAt
+                        ? new Date(agreement.startedAt).toLocaleDateString()
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
 
-                <div
-                  className="
-flex
-gap-3
-"
-                >
-                  <FiCalendar
-                    className="
-text-emerald-600
-"
-                  />
+                <div className="flex gap-3">
+                  <FiBriefcase className="text-emerald-600" />
 
                   <div>
-                    <p
-                      className="
-text-gray-500
-text-sm
-"
-                    >
-                      Started
-                    </p>
+                    <p className="text-sm text-gray-500">Job Status</p>
 
-                    <p
-                      className="
-font-semibold
-"
-                    >
-                      {new Date(agreement.startedAt).toLocaleDateString()}
-                    </p>
+                    <p className="font-bold">{agreement.job?.status}</p>
                   </div>
-                </div>
-
-                <div>
-                  <p
-                    className="
-text-gray-500
-text-sm
-"
-                  >
-                    Job Status
-                  </p>
-
-                  <p
-                    className="
-font-semibold
-"
-                  >
-                    {agreement.job?.status}
-                  </p>
                 </div>
               </div>
-
-              {/* Completion */}
 
               <div
                 className="
 mt-8
 flex
+flex-col
+sm:flex-row
 justify-between
-items-center
-flex-wrap
-gap-4
+gap-5
 "
               >
-                <div
-                  className="
-flex
-gap-3
-"
-                >
+                <div className="flex gap-3 flex-wrap">
                   <span
-                    className={`
+                    className="
+rounded-full
+bg-gray-100
 px-4
 py-2
-rounded-full
-${
-  agreement.workerCompleted
-    ? "bg-green-100 text-green-700"
-    : "bg-yellow-100 text-yellow-700"
-}
-`}
+text-sm
+"
                   >
                     Worker:
-                    {agreement.workerCompleted ? "Completed" : "Pending"}
+                    {agreement.workerCompleted ? "Done" : "Pending"}
                   </span>
 
                   <span
-                    className={`
+                    className="
+rounded-full
+bg-gray-100
 px-4
 py-2
-rounded-full
-${
-  agreement.clientCompleted
-    ? "bg-green-100 text-green-700"
-    : "bg-yellow-100 text-yellow-700"
-}
-`}
+text-sm
+"
                   >
                     Client:
-                    {agreement.clientCompleted ? "Completed" : "Pending"}
+                    {agreement.clientCompleted ? "Done" : "Pending"}
                   </span>
                 </div>
 
@@ -553,12 +563,14 @@ ${
                   className="
 flex
 items-center
+justify-center
 gap-2
+rounded-xl
 bg-emerald-600
-text-white
 px-6
 py-3
-rounded-xl
+text-white
+font-semibold
 hover:bg-emerald-700
 transition
 "

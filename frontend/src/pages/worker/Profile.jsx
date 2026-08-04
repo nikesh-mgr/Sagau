@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   FiStar,
   FiAward,
@@ -9,32 +10,59 @@ import {
   FiDollarSign,
   FiBriefcase,
   FiGlobe,
-  FiPhone,
   FiMail,
 } from "react-icons/fi";
 
 import { getMyWorkerProfile, updateWorkerProfile } from "../../api/workerApi";
+
 import { successToast, errorToast } from "../../utils/toast";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
   const [editing, setEditing] = useState(false);
+
+  const [updating, setUpdating] = useState(false);
+
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const [previewImage, setPreviewImage] = useState("");
 
   const [formData, setFormData] = useState({
     experience: "",
+
     hourlyRate: "",
+
     location: "",
-    availability: "Available",
-    skills: "",
-    bio: "",
-    portfolio: "",
+
     phone: "",
+
+    availability: "Available",
+
+    skills: "",
+
+    bio: "",
+
+    portfolio: "",
   });
+
+  const API_URL = "http://localhost:5000";
 
   useEffect(() => {
     loadProfile();
-  }, []);
+
+    return () => {
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
+
+  // =====================================================
+  // Load Worker Profile
+  // =====================================================
 
   const loadProfile = async () => {
     try {
@@ -46,14 +74,27 @@ const Profile = () => {
 
       setFormData({
         experience: data.experience || "",
+
         hourlyRate: data.hourlyRate || "",
+
         location: data.location || "",
+
+        phone: data.phone || "",
+
         availability: data.availability || "Available",
+
         skills: data.skills?.join(", ") || "",
+
         bio: data.bio || "",
+
         portfolio: data.portfolio?.join(", ") || "",
-        phone: data.user?.phone || "",
       });
+
+      if (data.profileImage) {
+        setPreviewImage(`${API_URL}${data.profileImage}`);
+      }
+
+      console.log("Worker Profile:", data);
     } catch (error) {
       errorToast(error?.response?.data?.message || "Failed to load profile");
     } finally {
@@ -61,44 +102,123 @@ const Profile = () => {
     }
   };
 
+  // =====================================================
+  // Input Change
+  // =====================================================
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
+
       [e.target.name]: e.target.value,
     }));
   };
 
+  // =====================================================
+  // Image Change
+  // =====================================================
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      errorToast("Only JPG, PNG and WEBP allowed");
+
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      errorToast("Image must be below 5MB");
+
+      return;
+    }
+
+    setSelectedImage(file);
+
+    setPreviewImage(URL.createObjectURL(file));
+  };
+
+  // =====================================================
+  // Update Worker Profile
+  // =====================================================
+
   const handleUpdate = async () => {
     try {
-      const payload = {
-        experience: Number(formData.experience),
-        hourlyRate: Number(formData.hourlyRate),
-        location: formData.location,
-        availability: formData.availability,
-        bio: formData.bio,
+      setUpdating(true);
 
-        skills: formData.skills
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+      const data = new FormData();
 
-        portfolio: formData.portfolio
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+      data.append("experience", formData.experience);
 
-        phone: formData.phone,
-      };
+      data.append("hourlyRate", formData.hourlyRate);
 
-      await updateWorkerProfile(payload);
+      data.append("location", formData.location);
+
+      data.append("phone", formData.phone);
+
+      data.append("availability", formData.availability);
+
+      data.append("bio", formData.bio);
+
+      formData.skills
+
+        .split(",")
+
+        .map((item) => item.trim())
+
+        .filter(Boolean)
+
+        .forEach((skill) => {
+          data.append("skills", skill);
+        });
+
+      formData.portfolio
+
+        .split(",")
+
+        .map((item) => item.trim())
+
+        .filter(Boolean)
+
+        .forEach((link) => {
+          data.append("portfolio", link);
+        });
+
+      if (selectedImage) {
+        data.append("profileImage", selectedImage);
+      }
+
+      console.log("========== UPDATE FORM DATA ==========");
+
+      for (const [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(key, value.name, value.type, value.size);
+        } else {
+          console.log(key, value);
+        }
+      }
+
+      await updateWorkerProfile(data);
 
       successToast("Profile updated successfully");
 
       setEditing(false);
 
+      setSelectedImage(null);
+
       loadProfile();
     } catch (error) {
+      console.log(error);
+
       errorToast(error?.response?.data?.message || "Failed to update profile");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -106,7 +226,7 @@ const Profile = () => {
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
 
           <p className="mt-4 text-gray-500">Loading Profile...</p>
         </div>
@@ -121,15 +241,27 @@ const Profile = () => {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       {/* Header */}
 
       <div className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-3xl font-bold text-emerald-700">
-            {profile.user?.fullName?.charAt(0).toUpperCase()}
+          <div className="relative">
+            <img
+              src={previewImage || "https://placehold.co/150x150?text=Photo"}
+              alt="Worker Profile"
+              className="w-24 h-24 rounded-full object-cover border-4 border-emerald-500"
+            />
+
+            {editing && (
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            )}
           </div>
 
           <div>
@@ -140,6 +272,7 @@ const Profile = () => {
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
               <span className="flex items-center gap-1">
                 <FiMapPin />
+
                 {profile.location}
               </span>
 
@@ -158,7 +291,7 @@ const Profile = () => {
 
         <button
           onClick={() => setEditing(!editing)}
-          className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 font-medium"
+          className="px-5 py-3 rounded-xl bg-emerald-600 text-white flex items-center gap-2"
         >
           <FiEdit />
 
@@ -168,7 +301,7 @@ const Profile = () => {
 
       {/* Statistics */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-3 gap-5">
         <StatCard
           icon={<FiStar />}
           title="Rating"
@@ -190,204 +323,163 @@ const Profile = () => {
           color="text-blue-600"
         />
       </div>
-      {/* Main Information */}
-      <div className="bg-white rounded-2xl shadow border p-6">
-        <div className="flex items-center justify-between mb-6">
+
+      {/* Information */}
+
+      <div className="bg-white rounded-2xl shadow p-6">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Worker Information</h2>
 
-          {!editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700"
-            >
-              <FiEdit />
-              Edit
-            </button>
-          ) : (
+          {editing ? (
             <button
               onClick={handleUpdate}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              disabled={updating}
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2"
             >
               <FiSave />
-              Save
+
+              {updating ? "Saving..." : "Save"}
             </button>
-          )}
+          ) : null}
         </div>
 
         <div className="grid md:grid-cols-2 gap-5">
-          {/* Experience */}
           <InputField
-            icon={<FiBriefcase />}
             label="Experience"
             name="experience"
             value={formData.experience}
             editing={editing}
             onChange={handleChange}
+            icon={<FiBriefcase />}
             suffix="Years"
           />
 
-          {/* Hourly Rate */}
           <InputField
-            icon={<FiDollarSign />}
             label="Hourly Rate"
             name="hourlyRate"
             value={formData.hourlyRate}
             editing={editing}
             onChange={handleChange}
+            icon={<FiDollarSign />}
             suffix="NPR/hr"
           />
 
-          {/* Location */}
           <InputField
-            icon={<FiMapPin />}
             label="Location"
             name="location"
             value={formData.location}
             editing={editing}
             onChange={handleChange}
+            icon={<FiMapPin />}
           />
 
-          {/* Phone */}
-          <div>
-            <label className="text-sm text-gray-500 font-medium">
-              Phone Number
-            </label>
+          <InputField
+            label="Phone"
+            name="phone"
+            value={formData.phone}
+            editing={editing}
+            onChange={handleChange}
+          />
+        </div>
 
-            <div className="mt-2 flex items-center gap-3 border rounded-lg px-4 py-3 bg-gray-50">
-              <FiPhone className="text-emerald-600" />
+        {/* Availability */}
 
-              <span className="font-medium">
-                {profile.user?.phone || profile.phone || "Not Added"}
-              </span>
+        <div className="mt-6">
+          <label className="text-sm text-gray-500">Availability</label>
+
+          {editing ? (
+            <select
+              name="availability"
+              value={formData.availability}
+              onChange={handleChange}
+              className="w-full mt-2 border rounded-xl px-4 py-3"
+            >
+              <option value="Available">Available</option>
+
+              <option value="Busy">Busy</option>
+
+              <option value="Not Available">Not Available</option>
+            </select>
+          ) : (
+            <div className="mt-2 bg-gray-50 border rounded-xl px-4 py-3">
+              {profile.availability}
             </div>
-
-            <p className="text-xs text-gray-400 mt-2">
-              This phone number is shown to clients only after a job is
-              accepted.
-            </p>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="text-sm text-gray-500 font-medium">Email</label>
-
-            <div className="mt-2 flex items-center gap-3 border rounded-lg px-4 py-3 bg-gray-50">
-              <FiMail className="text-blue-600" />
-
-              <span className="font-medium">{profile.user?.email}</span>
-            </div>
-          </div>
-
-          {/* Availability */}
-          <div>
-            <label className="text-sm text-gray-500 font-medium">
-              Availability
-            </label>
-
-            {editing ? (
-              <select
-                name="availability"
-                value={formData.availability}
-                onChange={handleChange}
-                className="w-full mt-2 border rounded-lg px-4 py-3"
-              >
-                <option value="Available">Available</option>
-                <option value="Busy">Busy</option>
-                <option value="Not Available">Not Available</option>
-              </select>
-            ) : (
-              <div className="mt-2 border rounded-lg px-4 py-3 bg-gray-50 font-medium">
-                {formData.availability}
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Skills */}
+
         <div className="mt-8">
-          <label className="text-sm text-gray-500 font-medium">Skills</label>
+          <label className="text-sm text-gray-500">Skills</label>
 
           {editing ? (
             <textarea
-              rows={3}
               name="skills"
               value={formData.skills}
               onChange={handleChange}
-              className="w-full mt-2 border rounded-lg p-3"
+              rows={3}
+              className="w-full mt-2 border rounded-xl p-4"
             />
           ) : (
             <div className="flex flex-wrap gap-2 mt-3">
-              {profile.skills?.length ? (
-                profile.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-500">No skills added</p>
-              )}
+              {profile.skills?.map((skill) => (
+                <span
+                  key={skill}
+                  className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full"
+                >
+                  {skill}
+                </span>
+              ))}
             </div>
           )}
         </div>
 
         {/* Bio */}
+
         <div className="mt-8">
-          <label className="text-sm text-gray-500 font-medium">
-            Professional Bio
-          </label>
+          <label className="text-sm text-gray-500">Professional Bio</label>
 
           {editing ? (
             <textarea
-              rows={5}
               name="bio"
               value={formData.bio}
               onChange={handleChange}
-              className="w-full mt-2 border rounded-lg p-3"
+              rows={5}
+              className="w-full mt-2 border rounded-xl p-4"
             />
           ) : (
-            <div className="mt-3 bg-gray-50 rounded-lg p-5 leading-7">
-              {profile.bio || "No bio available"}
-            </div>
+            <div className="mt-3 bg-gray-50 rounded-xl p-5">{profile.bio}</div>
           )}
         </div>
 
         {/* Portfolio */}
+
         <div className="mt-8">
-          <label className="text-sm text-gray-500 font-medium">
-            Portfolio Links
-          </label>
+          <label className="text-sm text-gray-500">Portfolio Links</label>
 
           {editing ? (
             <textarea
-              rows={3}
               name="portfolio"
               value={formData.portfolio}
               onChange={handleChange}
-              placeholder="https://github.com/..., https://..."
-              className="w-full mt-2 border rounded-lg p-3"
+              rows={3}
+              className="w-full mt-2 border rounded-xl p-4"
             />
           ) : (
             <div className="space-y-3 mt-3">
-              {profile.portfolio?.length ? (
-                profile.portfolio.map((link) => (
-                  <a
-                    key={link}
-                    href={link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3 hover:bg-emerald-50"
-                  >
-                    <FiGlobe className="text-emerald-600" />
+              {profile.portfolio?.map((link) => (
+                <a
+                  key={link}
+                  href={link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3"
+                >
+                  <FiGlobe />
 
-                    <span className="truncate">{link}</span>
-                  </a>
-                ))
-              ) : (
-                <p className="text-gray-500">No portfolio links added</p>
-              )}
+                  {link}
+                </a>
+              ))}
             </div>
           )}
         </div>
@@ -403,7 +495,7 @@ const StatCard = ({ icon, title, value, color }) => {
 
       <h3 className="text-3xl font-bold mt-4">{value}</h3>
 
-      <p className="text-gray-500 mt-1">{title}</p>
+      <p className="text-gray-500">{title}</p>
     </div>
   );
 };
@@ -419,12 +511,12 @@ const InputField = ({
 }) => {
   return (
     <div>
-      <label className="text-sm text-gray-500 font-medium">{label}</label>
+      <label className="text-sm text-gray-500">{label}</label>
 
       {editing ? (
         <div className="relative mt-2">
           {icon && (
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2">
               {icon}
             </span>
           )}
@@ -433,19 +525,11 @@ const InputField = ({
             name={name}
             value={value}
             onChange={onChange}
-            className={`w-full border rounded-lg py-3 ${
-              icon ? "pl-10" : "pl-4"
-            } ${suffix ? "pr-16" : "pr-4"} focus:ring-2 focus:ring-emerald-500 outline-none`}
+            className="w-full border rounded-xl px-10 py-3"
           />
-
-          {suffix && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-              {suffix}
-            </span>
-          )}
         </div>
       ) : (
-        <div className="mt-2 border rounded-lg bg-gray-50 px-4 py-3 font-medium">
+        <div className="mt-2 bg-gray-50 border rounded-xl px-4 py-3">
           {value || "Not Added"}
         </div>
       )}

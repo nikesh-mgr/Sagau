@@ -1,4 +1,5 @@
 import Job from "../models/jobSchema.js";
+import Client from "../models/clientSchema.js";
 
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
@@ -8,12 +9,19 @@ import ApiResponse from "../utils/ApiResponse.js";
 export const createJob = asyncHandler(async (req, res) => {
   const job = await Job.create({
     client: req.user._id,
+
     title: req.body.title,
+
     description: req.body.description,
+
     budget: req.body.budget,
+
     skillsRequired: req.body.skillsRequired,
+
     location: req.body.location,
+
     deadline: req.body.deadline,
+
     category: req.body.category,
   });
 
@@ -23,13 +31,14 @@ export const createJob = asyncHandler(async (req, res) => {
 // Get all jobs with filters and pagination
 export const getAllJobs = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
+
   const limit = Number(req.query.limit) || 10;
+
   const skip = (page - 1) * limit;
 
   const { search, category, location, minBudget, maxBudget, status } =
     req.query;
 
-  // Workers should only see OPEN jobs unless a status is explicitly requested
   const filter = {
     status: status || "OPEN",
   };
@@ -42,6 +51,7 @@ export const getAllJobs = asyncHandler(async (req, res) => {
           $options: "i",
         },
       },
+
       {
         description: {
           $regex: search,
@@ -58,6 +68,7 @@ export const getAllJobs = asyncHandler(async (req, res) => {
   if (location) {
     filter.location = {
       $regex: location,
+
       $options: "i",
     };
   }
@@ -74,37 +85,86 @@ export const getAllJobs = asyncHandler(async (req, res) => {
     }
   }
 
-  const jobs = await Job.find(filter)
-    .populate("client", "fullName email")
-    .sort({ createdAt: -1 })
+  let jobs = await Job.find(filter)
+
+    .populate("client", "fullName email role")
+
+    .sort({
+      createdAt: -1,
+    })
+
     .skip(skip)
+
     .limit(limit);
+
+  // Attach client profile image
+
+  jobs = await Promise.all(
+    jobs.map(async (job) => {
+      const clientProfile = await Client.findOne({
+        user: job.client._id,
+      }).select("profileImage address phone");
+
+      return {
+        ...job.toObject(),
+
+        clientProfile,
+      };
+    }),
+  );
 
   const totalJobs = await Job.countDocuments(filter);
 
   res.status(200).json(
-    new ApiResponse(200, "Jobs fetched successfully", {
-      jobs,
-      pagination: {
-        totalJobs,
-        currentPage: page,
-        totalPages: Math.ceil(totalJobs / limit),
+    new ApiResponse(
+      200,
+
+      "Jobs fetched successfully",
+
+      {
+        jobs,
+
+        pagination: {
+          totalJobs,
+
+          currentPage: page,
+
+          totalPages: Math.ceil(totalJobs / limit),
+        },
       },
-    }),
+    ),
   );
 });
-// Get a single job
+
+// Get single job
 export const getSingleJob = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.jobId).populate(
-    "client",
-    "fullName email role",
-  );
+  let job = await Job.findById(req.params.jobId)
+
+    .populate("client", "fullName email role");
 
   if (!job) {
     throw new ApiError(404, "Job not found");
   }
 
-  res.status(200).json(new ApiResponse(200, "Job fetched successfully", job));
+  const clientProfile = await Client.findOne({
+    user: job.client._id,
+  }).select("profileImage address phone");
+
+  job = {
+    ...job.toObject(),
+
+    clientProfile,
+  };
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+
+      "Job fetched successfully",
+
+      job,
+    ),
+  );
 });
 
 // Update a job
@@ -119,14 +179,26 @@ export const updateJob = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can update only your jobs");
   }
 
-  const updatedJob = await Job.findByIdAndUpdate(req.params.jobId, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const updatedJob = await Job.findByIdAndUpdate(
+    req.params.jobId,
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, "Job updated successfully", updatedJob));
+    req.body,
+
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+
+      "Job updated successfully",
+
+      updatedJob,
+    ),
+  );
 });
 
 // Delete a job
@@ -143,7 +215,13 @@ export const deleteJob = asyncHandler(async (req, res) => {
 
   await job.deleteOne();
 
-  res.status(200).json(new ApiResponse(200, "Job deleted successfully"));
+  res.status(200).json(
+    new ApiResponse(
+      200,
+
+      "Job deleted successfully",
+    ),
+  );
 });
 
 // Update job status
@@ -167,16 +245,49 @@ export const updateJobStatus = asyncHandler(async (req, res) => {
   }
 
   job.status = status;
+
   await job.save();
 
-  res.status(200).json(new ApiResponse(200, "Job status updated", job));
+  res.status(200).json(
+    new ApiResponse(
+      200,
+
+      "Job status updated",
+
+      job,
+    ),
+  );
 });
 
-// Get jobs created by the logged-in client
+// Get jobs created by logged-in client
 export const getMyJobs = asyncHandler(async (req, res) => {
-  const jobs = await Job.find({
+  let jobs = await Job.find({
     client: req.user._id,
-  }).sort({ createdAt: -1 });
+  }).sort({
+    createdAt: -1,
+  });
 
-  res.status(200).json(new ApiResponse(200, "Client jobs fetched", jobs));
+  jobs = await Promise.all(
+    jobs.map(async (job) => {
+      const clientProfile = await Client.findOne({
+        user: req.user._id,
+      }).select("profileImage address phone");
+
+      return {
+        ...job.toObject(),
+
+        clientProfile,
+      };
+    }),
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+
+      "Client jobs fetched",
+
+      jobs,
+    ),
+  );
 });

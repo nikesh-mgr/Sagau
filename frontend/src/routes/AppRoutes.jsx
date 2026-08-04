@@ -8,7 +8,8 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientProfile from "../pages/client/ClientProfile";
 import ClientDashboard from "../pages/client/ClientDashboard";
 import WorkerDashboard from "../pages/worker/WorkerDashboard";
-import AdminDashboard from "../pages/admin/AdminDashboard";
+import WorkerDetails from "../pages/admin/WorkerDetails";
+import AdminMessages from "../pages/admin/AdminMessages";
 import AuthLayout from "../layouts/AuthLayout";
 import Contact from "../pages/public/Contact";
 import CreateWorkerProfile from "../pages/worker/CreateWorkerProfile";
@@ -36,6 +37,18 @@ import WorkerReviews from "../pages/worker/Reviews";
 import ProfileCompleteRoute from "./ProfileCompleteRoute";
 import WorkerProfile from "../pages/worker/Profile";
 import ClientReviews from "../pages/client/MyReviews";
+
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminUsers from "../pages/admin/AdminUser";
+import AdminWorkers from "../pages/admin/AdminWorkers";
+import AdminClients from "../pages/admin/AdminClients";
+import ClientDetails from "../pages/admin/ClientDetails";
+import AdminJobs from "../pages/admin/AdminJobs";
+
+import AdminAgreements from "../pages/admin/AdminAgreements";
+import AdminJobDetails from "../pages/admin/AdminJobDetails";
+import AdminAgreementDetails from "../pages/admin/AdminAgreementDetails";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -212,7 +225,6 @@ const router = createBrowserRouter([
           },
         ],
       },
-
       {
         path: "admin",
 
@@ -224,9 +236,62 @@ const router = createBrowserRouter([
 
             children: [
               {
-                path: "dashboard",
-
+                index: true,
                 element: <AdminDashboard />,
+              },
+
+              {
+                path: "dashboard",
+                element: <AdminDashboard />,
+              },
+
+              {
+                path: "users",
+                element: <AdminUsers />,
+              },
+
+              {
+                path: "workers",
+                element: <AdminWorkers />,
+              },
+              {
+                path: "workers/:workerId",
+                element: <WorkerDetails />,
+              },
+
+              {
+                path: "clients",
+                element: <AdminClients />,
+              },
+              {
+                path: "clients/:clientId",
+                element: <ClientDetails />,
+              },
+              {
+                path: "jobs",
+                element: <AdminJobs />,
+              },
+
+              // {
+              //   path: "applications",
+              //   element: <AdminApplications />,
+              // },
+
+              {
+                path: "agreements",
+                element: <AdminAgreements />,
+              },
+              {
+                path: "messages",
+                element: <AdminMessages />,
+              },
+              {
+                path: "jobs/:jobId",
+                element: <AdminJobDetails />,
+              },
+              {
+                path: "agreements/:agreementId",
+                element: <AdminAgreementDetails />,
               },
             ],
           },

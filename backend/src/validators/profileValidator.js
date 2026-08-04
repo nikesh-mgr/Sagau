@@ -1,8 +1,11 @@
 import { body } from "express-validator";
 
+// =====================================================
 // WORKER PROFILE VALIDATION
+// =====================================================
+
 export const workerProfileValidator = [
-  body("skills").isArray({ min: 1 }).withMessage("At least one skill required"),
+  body("skills").notEmpty().withMessage("At least one skill is required"),
 
   body("bio")
     .trim()
@@ -18,7 +21,10 @@ export const workerProfileValidator = [
   body("phone").trim().notEmpty().withMessage("Phone number required"),
 ];
 
+// =====================================================
 // CLIENT PROFILE VALIDATION
+// =====================================================
+
 export const clientProfileValidator = [
   body("address").trim().notEmpty().withMessage("Address is required"),
 

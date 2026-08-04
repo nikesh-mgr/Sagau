@@ -5,8 +5,8 @@ export const createJobValidator = [
 
   body("description")
     .trim()
-    .isLength({ min: 30 })
-    .withMessage("Description must be at least 30 characters"),
+    .isLength({ min: 10 })
+    .withMessage("Description must be at least 10 characters"),
 
   body("budget").isNumeric().withMessage("Budget must be numeric"),
 

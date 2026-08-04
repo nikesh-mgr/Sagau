@@ -1,5 +1,4 @@
 import { NavLink } from "react-router-dom";
-
 import {
   FiHome,
   FiUser,
@@ -7,8 +6,10 @@ import {
   FiUsers,
   FiFileText,
   FiStar,
-  FiX,
+  FiBell,
+  FiSettings,
   FiShield,
+  FiX,
 } from "react-icons/fi";
 
 import useAuthStore from "../../store/authStore";
@@ -28,7 +29,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: <FiUser />,
     },
     {
-      name: "Jobs",
+      name: "My Jobs",
       path: "jobs",
       icon: <FiBriefcase />,
     },
@@ -82,11 +83,80 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     },
   ];
 
-  const links = user?.role === "client" ? clientLinks : workerLinks;
+  const adminLinks = [
+    {
+      name: "Dashboard",
+      path: "dashboard",
+      icon: <FiHome />,
+    },
+    {
+      name: "Users",
+      path: "users",
+      icon: <FiUsers />,
+    },
+    {
+      name: "Workers",
+      path: "workers",
+      icon: <FiUser />,
+    },
+    {
+      name: "Clients",
+      path: "clients",
+      icon: <FiUsers />,
+    },
+    {
+      name: "Jobs",
+      path: "jobs",
+      icon: <FiBriefcase />,
+    },
+    // {
+    //   name: "Applications",
+    //   path: "applications",
+    //   icon: <FiFileText />,
+    // },
+    {
+      name: "Agreements",
+      path: "agreements",
+      icon: <FiShield />,
+    },
+    // {
+    //   name: "Reviews",
+    //   path: "reviews",
+    //   icon: <FiStar />,
+    // },
+    {
+      name: "Messages",
+      path: "messages",
+      icon: <FiBell />,
+    },
+    // {
+    //   name: "Settings",
+    //   path: "settings",
+    //   icon: <FiSettings />,
+    // },
+  ];
+
+  let links = [];
+
+  switch (user?.role) {
+    case "client":
+      links = clientLinks;
+      break;
+
+    case "worker":
+      links = workerLinks;
+      break;
+
+    case "admin":
+      links = adminLinks;
+      break;
+
+    default:
+      links = [];
+  }
 
   return (
     <>
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -99,26 +169,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Brand Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-emerald-600">Sagau</h1>
+            <h1 className="text-2xl font-bold text-emerald-600">
+              {user?.role === "admin" ? "Sagau Admin" : "Sagau"}
+            </h1>
 
-            <p className="mt-1 text-xs text-gray-500">
-              Skilled worker marketplace
+            <p className="mt-1 text-xs text-gray-500 capitalize">
+              {user?.role} Portal
             </p>
           </div>
 
           <button
             onClick={() => setSidebarOpen(false)}
-            aria-label="Close sidebar"
             className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition hover:bg-gray-100 md:hidden"
           >
             <FiX size={22} />
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 space-y-2 overflow-y-auto">
           {links.map((item) => (
             <NavLink
@@ -154,10 +223,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="mt-5 border-t border-gray-100 pt-4">
           <p className="text-center text-xs text-gray-400">
-            Build trust. Find skilled people.
+            {user?.role === "admin"
+              ? "Sagau Administration Panel"
+              : "Build trust. Find skilled people."}
           </p>
         </div>
       </aside>

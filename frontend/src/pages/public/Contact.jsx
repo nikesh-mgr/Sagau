@@ -7,8 +7,40 @@ import {
   FiPhone,
   FiSend,
 } from "react-icons/fi";
+import { useState } from "react";
+import { sendContactMessage } from "../../api/contactApi";
 
 const Contact = () => {
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await sendContactMessage(form);
+
+      alert("Message sent successfully!");
+
+      setForm({
+        fullName: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to send");
+    }
+  };
   return (
     <div>
       {/* Hero */}
@@ -110,7 +142,7 @@ const Contact = () => {
               possible.
             </p>
 
-            <form className="mt-8 space-y-5">
+            <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <div>
                 <label className="mb-2 block font-medium text-slate-700">
                   Full Name
@@ -118,6 +150,9 @@ const Contact = () => {
 
                 <input
                   type="text"
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={handleChange}
                   placeholder="Enter your full name"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500"
                 />
@@ -130,6 +165,9 @@ const Contact = () => {
 
                 <input
                   type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="Enter your email"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500"
                 />
@@ -142,6 +180,9 @@ const Contact = () => {
 
                 <input
                   type="text"
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
                   placeholder="How can we help?"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500"
                 />
@@ -154,6 +195,9 @@ const Contact = () => {
 
                 <textarea
                   rows="6"
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
                   placeholder="Write your message..."
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500"
                 ></textarea>

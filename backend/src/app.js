@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-
+import path from "path";
 import startJobScheduler from "./utils/jobScheduler.js";
 
 import authRoutes from "./routes/authRoute.js";
@@ -16,14 +16,19 @@ import reviewRoutes from "./routes/reviewRoute.js";
 import adminRoutes from "./routes/adminRoute.js";
 import dashboardRoute from "./routes/dashboardRoute.js";
 import notificationRoute from "./routes/notificationRoute.js";
+import contactRoutes from "./routes/contactRoute.js";
 
 import errorMiddleware from "./middleware/errorMiddleware.js";
 
 const app = express();
 
 // Security middleware
-app.use(helmet());
-
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // CORS
 app.use(
   cors({
@@ -62,6 +67,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/dashboard", dashboardRoute);
 
 app.use("/api/notifications", notificationRoute);
+
+app.use("/api/contact", contactRoutes);
 
 // ================= ROOT =================
 
