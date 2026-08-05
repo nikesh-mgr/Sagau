@@ -188,7 +188,6 @@ export const getWorkerById = asyncHandler(async (req, res) => {
     "user",
     "fullName email role",
   );
-
   if (!worker) {
     throw new ApiError(404, "Worker not found");
   }

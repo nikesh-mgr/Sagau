@@ -22,6 +22,7 @@ import {
 // ===============================
 // IMAGE HANDLER
 // ===============================
+const API_URL = "http://localhost:5000";
 
 const getClientImage = (client) => {
   const image =
@@ -33,13 +34,14 @@ const getClientImage = (client) => {
     return "https://placehold.co/100x100?text=Client";
   }
 
+  // Already a full URL
   if (image.startsWith("http")) {
     return image;
   }
 
-  return `http://localhost:5000/uploads/${image}`;
+  // Remove leading slash and append to API URL
+  return `${API_URL}/${image.replace(/^\/+/, "")}`;
 };
-
 // ===============================
 // COMPONENT
 // ===============================

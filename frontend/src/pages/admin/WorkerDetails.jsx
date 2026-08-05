@@ -26,7 +26,17 @@ const WorkerDetails = () => {
   const [worker, setWorker] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const getWorkerImage = (worker) => {
+    if (!worker?.profileImage) {
+      return "https://placehold.co/220x220?text=Worker";
+    }
 
+    if (worker.profileImage.startsWith("http")) {
+      return worker.profileImage;
+    }
+
+    return `http://localhost:5000${worker.profileImage}`;
+  };
   const loadWorker = async () => {
     try {
       setLoading(true);
@@ -94,7 +104,64 @@ const WorkerDetails = () => {
       </div>
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Left Side */}
+        {/* Worker Profile */}
 
+        <div className="bg-white rounded-3xl shadow border border-slate-200 p-8">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src={getWorkerImage(worker)}
+              alt={worker.user.fullName}
+              className="h-52 w-52 rounded-3xl object-cover border-4 border-slate-200 shadow-lg"
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://placehold.co/220x220?text=Worker";
+              }}
+            />
+
+            <h2 className="mt-6 text-3xl font-bold text-slate-900">
+              {worker.user.fullName}
+            </h2>
+
+            <p className="mt-2 flex items-center justify-center gap-2 text-slate-600">
+              <FiMail />
+              {worker.user.email}
+            </p>
+
+            <p className="mt-2 flex items-center justify-center gap-2 text-slate-600">
+              <FiPhone />
+              {worker.phone || "Not Provided"}
+            </p>
+
+            <p className="mt-2 flex items-center justify-center gap-2 text-slate-600">
+              <FiMapPin />
+              {worker.location || "Not Provided"}
+            </p>
+
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <span
+                className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                  worker.user.isActive
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {worker.user.isActive ? "Active" : "Blocked"}
+              </span>
+
+              <span
+                className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                  worker.availability === "Available"
+                    ? "bg-green-100 text-green-700"
+                    : worker.availability === "Busy"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                }`}
+              >
+                {worker.availability}
+              </span>
+            </div>
+          </div>
+        </div>
         <div className="space-y-8">
           {/* Skills */}
 

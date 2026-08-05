@@ -98,9 +98,7 @@ const AdminJobs = () => {
 
   const handleStatusChange = async (jobId, status) => {
     try {
-      await updateJobStatusByAdmin(jobId, {
-        status,
-      });
+      await updateJobStatusByAdmin(jobId, status);
 
       setJobs((prev) =>
         prev.map((job) =>
@@ -208,7 +206,8 @@ const AdminJobs = () => {
 
             <option value="COMPLETED">Completed</option>
 
-            <option value="CANCELLED">Cancelled</option>
+            <option value="CLOSED">CLOSED</option>
+            <option value="EXPIRED">EXPIRED</option>
           </select>
         </div>
       </div>{" "}
@@ -289,7 +288,8 @@ const AdminJobs = () => {
 
                         <option value="COMPLETED">COMPLETED</option>
 
-                        <option value="CANCELLED">CANCELLED</option>
+                        <option value="CLOSED">CLOSED</option>
+                        <option value="EXPIRED">EXPIRED</option>
                       </select>
                     </td>
 

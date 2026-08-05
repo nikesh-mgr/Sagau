@@ -186,11 +186,14 @@ const ClientDetails = () => {
           <img
             src={
               client.profileImage
-                ? `http://localhost:5000/uploads/${client.profileImage}`
+                ? `http://localhost:5000${client.profileImage}`
                 : "https://placehold.co/220x220?text=Client"
             }
             alt={client.user.fullName}
             className="h-52 w-52 rounded-3xl border object-cover shadow-lg"
+            onError={(e) => {
+              e.currentTarget.src = "https://placehold.co/220x220?text=Client";
+            }}
           />
 
           <div className="flex-1 space-y-4">

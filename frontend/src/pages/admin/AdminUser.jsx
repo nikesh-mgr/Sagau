@@ -8,7 +8,6 @@ import {
   FiShieldOff,
   FiUsers,
   FiMapPin,
-  FiPhone,
   FiCalendar,
   FiStar,
   FiX,
@@ -398,8 +397,6 @@ overflow-x-auto
 
                 <th className="text-left px-6 py-4">Role</th>
 
-                <th className="text-left px-6 py-4">Contact</th>
-
                 <th className="text-left px-6 py-4">Information</th>
 
                 <th className="text-left px-6 py-4">Status</th>
@@ -500,47 +497,6 @@ ${
                     >
                       {user.role}
                     </span>
-                  </td>
-
-                  {/* CONTACT */}
-
-                  <td className="px-6 py-5">
-                    <div
-                      className="
-space-y-2
-text-sm
-"
-                    >
-                      <p
-                        className="
-flex
-items-center
-gap-2
-text-slate-600
-"
-                      >
-                        <FiPhone />
-
-                        {user.workerProfile?.phone ||
-                          user.clientProfile?.phone ||
-                          "No phone"}
-                      </p>
-
-                      {user.clientProfile?.address && (
-                        <p
-                          className="
-flex
-items-center
-gap-2
-text-slate-500
-"
-                        >
-                          <FiMapPin />
-
-                          {user.clientProfile.address}
-                        </p>
-                      )}
-                    </div>
                   </td>
 
                   {/* INFORMATION */}
